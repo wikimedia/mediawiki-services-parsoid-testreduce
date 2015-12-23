@@ -99,7 +99,7 @@ function updateTitleData(data, prefix, title) {
 	data.perf = '/pageperfstats/' + prefix + '/' + title;
 }
 
-function setupEndpoints(settings, app, mysql, db, hbs) {
+function setupEndpoints(settings, app, mysql, db) {
 	// SSS FIXME: this is awkward
 	RH.settings = settings;
 	var getPerfStats = function(req, res) {
@@ -158,7 +158,7 @@ function setupEndpoints(settings, app, mysql, db, hbs) {
 				};
 
 				db.query(dbStmt, null,
-					RH.displayPageList.bind(null, hbs, res, data, makePerfStatRow));
+					RH.displayPageList.bind(null, res, data, makePerfStatRow));
 			}
 		});
 	};

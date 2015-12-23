@@ -6,9 +6,8 @@ require('../../core-upgrade.js');
  * A client for testing round-tripping of articles.
  */
 
-var http = require('http');
+var request = require('request');
 var cluster = require('cluster');
-var qs = require('querystring');
 var exec = require('child_process').exec;
 var apiServer = require('../apiServer.js');
 var Util = require('../../lib/utils/Util.js').Util;
@@ -141,31 +140,34 @@ var postResult = function(err, result, test, finalCB, cb) {
 				'</error>';
 		}
 
-		result = qs.stringify({ results: result, commit: newCommit, ctime: newTime, test: JSON.stringify(test) });
-
-		var requestOptions = {
-			host: config.server.host,
-			port: config.server.port,
+		var uri = 'http://' + config.server.host + ":" + config.server.port + '/result/' + encodeURIComponent(test.title) + '/' + test.prefix;
+		var form = {
+			results: result,
+			commit: newCommit,
+			ctime: newTime,
+			test: test,
+		};
+		var postOpts = {
+			uri: uri,
+			method: 'POST',
 			headers: {
 				'Content-Type': 'application/x-www-form-urlencoded',
+				'Connection': 'close',
 			},
-			path: '/result/' + encodeURIComponent(test.title) + '/' + test.prefix,
-			method: 'POST',
+			form: form,
 		};
 
-		var req = http.request(requestOptions, function(res) {
-			res.on('end', function() {
-				if (finalCB) {
-					finalCB();
-				} else {
-					cb('start');
-				}
-			});
-			res.resume();
+		request(postOpts, function(err3, res) {
+			if (err3) {
+				console.log("Error processing posted result: " + err3);
+				console.log("Posted form: " + JSON.stringify(form));
+			}
+			if (finalCB) {
+				finalCB();
+			} else {
+				cb('start');
+			}
 		});
-
-		req.write(result, 'utf8');
-		req.end();
 	});
 };
 

@@ -2,11 +2,15 @@
 "use strict";
 require('../../core-upgrade.js');
 
+var bodyParser = require('body-parser');
+var busboy = require('connect-busboy');
 var express = require('express');
 var yargs = require('yargs');
-var hbs = require('handlebars');
+var ehbs = require('express-handlebars');
 var Diff = require('./diff.js').Diff;
 var RH = require('./render.helpers.js').RenderHelpers;
+var path = require('path');
+var Promise = require('../../lib/utils/promise.js');
 
 // Default options
 var defaults = {
@@ -537,13 +541,13 @@ var getTitle = function(req, res) {
 	if (knownCommit && commitHash !== lastFetchedCommit) {
 		// It's an old commit, tell the client so it can restart.
 		// HTTP status code 426 Update Required
-		res.send("Old commit", 426);
+		res.status(426).send("Old commit");
 		return;
 	}
 
 	var fetchCb = function(err, pages) {
 		if (err) {
-			res.send("Error: " + err.toString(), 500);
+			res.status(500).send("Error: " + err.toString());
 			return;
 		}
 
@@ -562,12 +566,12 @@ var getTitle = function(req, res) {
 		if (fetchedPages.length === 0) {
 			// Send 404 to indicate no pages available now, clients depend on
 			// this.
-			res.send('No available titles that fit the constraints.', 404);
+			res.status(404).send('No available titles that fit the constraints.');
 		} else {
 			var page = fetchedPages.pop();
 
 			console.log(' ->', page.prefix + ':' + page.title);
-			res.send(page, 200);
+			res.status(200).send(page);
 		}
 	};
 
@@ -604,7 +608,7 @@ var transUpdateCB = function(title, prefix, hash, type, res, trans, successCb, e
 		console.error(msg);
 		console.error(err);
 		if (res) {
-			res.send(msg, 500);
+			res.status(500).send(msg);
 		}
 	} else if (successCb) {
 		successCb(result);
@@ -662,7 +666,7 @@ var receiveResults = function(req, res) {
 				if (err) {
 					console.error("Error incrementing fetch count: " + err.toString());
 				}
-				res.send('', 200);
+				res.status(200).send('');
 			});
 
 	} else {
@@ -696,7 +700,7 @@ var receiveResults = function(req, res) {
 											}
 
 											// Maybe the perfstats aren't committed yet, but it shouldn't be a problem
-											res.send('', 200);
+											res.status(200).send('');
 										});
 									}));
 							}));
@@ -704,28 +708,15 @@ var receiveResults = function(req, res) {
 			} else {
 				trans.rollback(function() {
 					if (err) {
-						res.send(err.toString(), 500);
+						res.status(500).send(err.toString());
 					} else {
-						res.send("Did not find claim for title: " + prefix + ':' + title, 200);
+						res.status(200).send("Did not find claim for title: " + prefix + ':' + title);
 					}
 				});
 			}
 		}).execute();
 	}
 };
-
-// block helper to reference js files in page head.
-// options.fn is a function taking the present context and returning a string
-// (whatever is between {{#jsFiles}} and {{/jsFiles}} in a template).
-// This string becomes the value of a 'javascripts' key added to the context, to be
-// rendered as html where {{{javascripts}}} appears in layout.html.
-hbs.registerHelper('jsFiles', function(options) {
-	if (!this.javascripts) {
-		this.javascripts = {};
-	}
-	this.javascripts = options.fn(this);
-	return null;
-});
 
 var pageListData = [
 	{ url: 'topfails', title: 'Results by title' },
@@ -742,21 +733,6 @@ if (perfConfig) {
 if (parsoidRTConfig) {
 	parsoidRTConfig.updateIndexPageUrls(pageListData);
 }
-
-hbs.registerHelper('formatPerfStat', function(type, value) {
-	if (type.match(/^time/)) {
-		// Show time in seconds
-		value = Math.round((value / 1000) * 100) / 100;
-		return value.toString() + "s";
-	} else if (type.match(/^size/)) {
-		// Show sizes in KiB
-		value = Math.round(value / 1024);
-		return value.toString() + "KiB";
-	} else {
-		// Other values go as they are
-		return value.toString();
-	}
-});
 
 var statsWebInterface = function(req, res) {
 	var query, queryParams;
@@ -779,7 +755,7 @@ var statsWebInterface = function(req, res) {
 	// Fetch stats for commit
 	db.query(query, queryParams, function(err, row) {
 		if (err) {
-			res.send(err.toString(), 500);
+			res.status(500).send(err.toString());
 			return;
 		}
 
@@ -853,15 +829,6 @@ var statsWebInterface = function(req, res) {
 			data.parsoidRT = true;
 		}
 
-		// round numeric data, but ignore others
-		hbs.registerHelper('round', function(val) {
-				if (isNaN(val)) {
-					return val;
-				} else {
-					return Math.round(val * 100) / 100;
-				}
-			});
-
 		res.render('index.html', data);
 	});
 };
@@ -890,7 +857,7 @@ var failsWebInterface = function(req, res) {
 		header: ['Title', 'Commit', 'Syntactic diffs', 'Semantic diffs', 'Errors'],
 	};
 	db.query(dbFailsQuery, [ offset ],
-		RH.displayPageList.bind(null, hbs, res, data, makeFailsRow));
+		RH.displayPageList.bind(null, res, data, makeFailsRow));
 };
 
 var resultsWebInterface = function(req, res) {
@@ -908,7 +875,7 @@ var resultsWebInterface = function(req, res) {
 	db.query(query, queryParams, function(err, rows) {
 		if (err) {
 			console.error(err);
-			res.send(err.toString(), 500);
+			res.status(500).send(err.toString());
 		} else {
 			res.setHeader('Content-Type', 'text/xml; charset=UTF-8');
 			res.status(200);
@@ -925,7 +892,7 @@ var resultsWebInterface = function(req, res) {
 var resultWebCallback = function(req, res, err, row) {
 	if (err) {
 		console.error(err);
-		res.send(err.toString(), 500);
+		res.status(500).send(err.toString());
 	} else if (row && row.length > 0) {
 		if (row[0].result.match(/<testsuite/)) {
 			res.setHeader('Content-Type', 'text/xml; charset=UTF-8');
@@ -934,7 +901,7 @@ var resultWebCallback = function(req, res, err, row) {
 		}
 		res.end(row[0].result);
 	} else {
-		res.send('no results for that page at the requested revision', 200);
+		res.status(200).send('no results for that page at the requested revision');
 	}
 };
 
@@ -954,7 +921,7 @@ var getFailedFetches = function(req, res) {
 	db.query(dbFailedFetches, [maxFetchRetries], function(err, rows) {
 		if (err) {
 			console.error(err);
-			res.send(err.toString(), 500);
+			res.status(500).send(err.toString());
 		} else {
 			res.status(200);
 			var n = rows.length;
@@ -975,9 +942,6 @@ var getFailedFetches = function(req, res) {
 				heading: heading,
 				items: pageData,
 			};
-			hbs.registerHelper('formatUrl', function(url) {
-				return 'http://' + encodeURI(url).replace('&', '&amp;');
-			});
 			res.render('list.html', data);
 		}
 	});
@@ -988,7 +952,7 @@ var getCrashers = function(req, res) {
 	db.query(dbCrashers, [ maxTries, cutoffDate ], function(err, rows) {
 		if (err) {
 			console.error(err);
-			res.send(err.toString(), 500);
+			res.status(500).send(err.toString());
 		} else {
 			res.status(200);
 			var n = rows.length;
@@ -1010,9 +974,6 @@ var getCrashers = function(req, res) {
 				heading: heading,
 				items: pageData,
 			};
-			hbs.registerHelper('formatUrl', function(url) {
-				return 'http://' + encodeURI(url).replace('&', '&amp;');
-			});
 			res.render('list.html', data);
 		}
 	});
@@ -1022,7 +983,7 @@ var getFailsDistr = function(req, res) {
 	db.query(dbFailsDistribution, null, function(err, rows) {
 		if (err) {
 			console.error(err);
-			res.send(err.toString(), 500);
+			res.status(500).send(err.toString());
 		} else {
 			res.status(200);
 			var n = rows.length;
@@ -1044,7 +1005,7 @@ var getSkipsDistr = function(req, res) {
 	db.query(dbSkipsDistribution, null, function(err, rows) {
 		if (err) {
 			console.error(err);
-			res.send(err.toString(), 500);
+			res.status(500).send(err.toString());
 		} else {
 			res.status(200);
 			var n = rows.length;
@@ -1071,7 +1032,7 @@ var getRegressions = function(req, res) {
 	relativeUrlPrefix = relativeUrlPrefix + (req.params[0] ? '../' : '');
 	db.query(dbNumRegressionsBetweenRevs, [ r2, r1 ], function(err, row) {
 		if (err) {
-			res.send(err.toString(), 500);
+			res.status(500).send(err.toString());
 		} else {
 			var data = {
 				page: page,
@@ -1084,7 +1045,7 @@ var getRegressions = function(req, res) {
 				header: RH.regressionsHeaderData,
 			};
 			db.query(dbRegressionsBetweenRevs, [ r2, r1, offset ],
-				RH.displayPageList.bind(null, hbs, res, data, RH.makeRegressionRow));
+				RH.displayPageList.bind(null, res, data, RH.makeRegressionRow));
 		}
 	});
 };
@@ -1098,7 +1059,7 @@ var getTopfixes = function(req, res) {
 	relativeUrlPrefix = relativeUrlPrefix + (req.params[0] ? '../' : '');
 	db.query(dbNumFixesBetweenRevs, [ r2, r1 ], function(err, row) {
 		if (err) {
-			res.send(err.toString(), 500);
+			res.status(500).send(err.toString());
 		} else {
 			var data = {
 				page: page,
@@ -1110,7 +1071,7 @@ var getTopfixes = function(req, res) {
 				header: RH.regressionsHeaderData,
 			};
 			db.query(dbFixesBetweenRevs, [ r2, r1, offset ],
-				RH.displayPageList.bind(null, hbs, res, data, RH.makeRegressionRow));
+				RH.displayPageList.bind(null, res, data, RH.makeRegressionRow));
 		}
 	});
 };
@@ -1119,7 +1080,7 @@ var getCommits = function(req, res) {
 	db.query(dbCommits, null, function(err, rows) {
 		if (err) {
 			console.error(err);
-			res.send(err.toString(), 500);
+			res.status(500).send(err.toString());
 		} else {
 			res.status(200);
 			var n = rows.length;
@@ -1140,13 +1101,6 @@ var getCommits = function(req, res) {
 				row: tableRows,
 			};
 
-			hbs.registerHelper('formatHash', function(hash) {
-				return hash.slice(0, 10);
-			});
-			hbs.registerHelper('formatDate', function(timestamp) {
-				return timestamp.toString().slice(4, 21);
-			});
-
 			res.render('commits.html', data);
 		}
 	});
@@ -1155,7 +1109,7 @@ var getCommits = function(req, res) {
 var diffResultWebCallback = function(req, res, flag, err, row) {
 	if (err) {
 		console.error(err);
-		res.send(err.toString(), 500);
+		res.status(500).send(err.toString());
 	} else if (row.length === 2) {
 		var oldCommit = req.params[0].slice(0, 10);
 		var newCommit = req.params[1].slice(0, 10);
@@ -1192,92 +1146,189 @@ var resultFlagOldWebInterface = function(req, res) {
 		diffResultWebCallback.bind(null, req, res, '-'));
 };
 
-// Make an app
-var app = express.createServer();
+var startCoordApp = Promise.method(function() {
+	// Make the coordinator app
+	var coordApp = express();
 
-// Configure for Handlebars
-app.configure(function() {
-	app.set('view engine', 'handlebars');
-	app.register('.html', require('handlebars'));
+	// application/x-www-form-urlencoded
+	// multipart/form-data
+	coordApp.use(busboy({
+		limits: {
+			fields: 10,
+			fieldSize: 1000000,
+		},
+	}));
+	coordApp.use(function(req, res, next) {
+		req.body = req.body || {};
+		if (!req.busboy) {
+			return next();
+		}
+		req.busboy.on('field', function(field, val) {
+			req.body[field] = val;
+		});
+		req.busboy.on('finish', function() {
+			next();
+		});
+		req.pipe(req.busboy);
+	});
+
+	// Clients will GET this path if they want to run a test
+	coordApp.get(/^\/title$/, getTitle);
+
+	// Receive results from clients
+	coordApp.post(/^\/result\/([^\/]+)\/([^\/]+)/, receiveResults);
+
+	var rtResultsServer;
+	return new Promise(function(resolve) {
+		rtResultsServer = coordApp.listen(settings.coordPort || 8002, process.env.INTERFACE, resolve);
+	}).then(function() {
+		console.log('RT test server listening on: %s', rtResultsServer.address().port);
+		return rtResultsServer;
+	});
 });
 
-// Declare static directory
-app.use("/static", express.static(__dirname + "/static"));
+var startWebServer = Promise.method(function() {
+	// Make an app
+	var app = express();
 
-// Make the coordinator app
-var coordApp = express.createServer();
+	// Declare static directory
+	app.use("/static", express.static(__dirname + "/static"));
 
-// Add in the bodyParser middleware (because it's pretty standard)
-app.use(express.bodyParser());
-coordApp.use(express.bodyParser());
+	// Add in the bodyParser middleware (because it's pretty standard)
+	app.use(bodyParser.json({}));
 
-// robots.txt: no indexing.
-app.get(/^\/robots\.txt$/, function(req, res) {
-	res.end("User-agent: *\nDisallow: /\n");
+	// robots.txt: no indexing.
+	app.get(/^\/robots\.txt$/, function(req, res) {
+		res.end("User-agent: *\nDisallow: /\n");
+	});
+
+	// Main interface
+	app.get(/^\/results(\/([^\/]+))?$/, resultsWebInterface);
+
+	// Results for a title (on latest commit)
+	app.get(/^\/latestresult\/([^\/]+)\/(.*)$/, resultWebInterface);
+
+	// Results for a title on any commit
+	app.get(/^\/result\/([a-f0-9]*)\/([^\/]+)\/(.*)$/, resultWebInterface);
+
+	// List of failures sorted by severity
+	app.get(/^\/topfails\/(\d+)$/, failsWebInterface);
+	// 0th page
+	app.get(/^\/topfails$/, failsWebInterface);
+
+	// Overview of stats
+	app.get(/^\/$/, statsWebInterface);
+	app.get(/^\/stats(\/([^\/]+))?$/, statsWebInterface);
+
+	// Failed fetches
+	app.get(/^\/failedFetches$/, getFailedFetches);
+
+	// Crashers
+	app.get(/^\/crashers$/, getCrashers);
+
+	// Regressions between two revisions.
+	app.get(/^\/regressions\/between\/([^\/]+)\/([^\/]+)(?:\/(\d+))?$/, getRegressions);
+
+	// Topfixes between two revisions.
+	app.get(/^\/topfixes\/between\/([^\/]+)\/([^\/]+)(?:\/(\d+))?$/, getTopfixes);
+
+	// Results for a title on a commit, flag skips/fails new since older commit
+	app.get(/^\/resultFlagNew\/([a-f0-9]*)\/([a-f0-9]*)\/([^\/]+)\/(.*)$/, resultFlagNewWebInterface);
+
+	// Results for a title on a commit, flag skips/fails no longer in newer commit
+	app.get(/^\/resultFlagOld\/([a-f0-9]*)\/([a-f0-9]*)\/([^\/]+)\/(.*)$/, resultFlagOldWebInterface);
+
+	// Distribution of fails
+	app.get(/^\/failsDistr$/, getFailsDistr);
+
+	// Distribution of fails
+	app.get(/^\/skipsDistr$/, getSkipsDistr);
+
+	// List of all commits
+	app.get('/commits', getCommits);
+
+	// view engine
+	var ve = ehbs.create({
+		defaultLayout: 'layout',
+		layoutsDir: path.join(__dirname, '/views'),
+		extname: '.html',
+		helpers: {
+			// block helper to reference js files in page head.
+			jsFiles: function(options) {
+				this.javascripts = options.fn(this);
+				return null;
+			},
+
+			formatPerfStat: function(type, value) {
+				if (type.match(/^time/)) {
+					// Show time in seconds
+					value = Math.round((value / 1000) * 100) / 100;
+					return value.toString() + "s";
+				} else if (type.match(/^size/)) {
+					// Show sizes in KiB
+					value = Math.round(value / 1024);
+					return value.toString() + "KiB";
+				} else {
+					// Other values go as they are
+					return value.toString();
+				}
+			},
+
+			// round numeric data, but ignore others
+			round: function(val) {
+				if (isNaN(val)) {
+					return val;
+				} else {
+					return Math.round(val * 100) / 100;
+				}
+			},
+
+			formatHash: function(hash) {
+				return hash.slice(0, 10);
+			},
+
+			formatDate: function(timestamp) {
+				return timestamp.toString().slice(4, 21);
+			},
+
+			formatUrl: function(url) {
+				return 'http://' + encodeURI(url).replace('&', '&amp;');
+			},
+
+			prevUrl: function(urlPrefix, urlSuffix, page) {
+				return (urlPrefix ? urlPrefix + "/" : "") + (page - 1) + urlSuffix;
+			},
+
+			nextUrl: function(urlPrefix, urlSuffix, page) {
+				return (urlPrefix ? urlPrefix + "/" : "") + (page + 1) + urlSuffix;
+			},
+		},
+	});
+
+	app.set('views', path.join(__dirname, '/views'));
+	app.set('view engine', 'html');
+	app.engine('html', ve.engine);
+
+	if (parsoidRTConfig) {
+		parsoidRTConfig.setupEndpoints(settings, app, mysql, db, ve.handlebars);
+	}
+
+	if (perfConfig) {
+		perfConfig.setupEndpoints(settings, app, mysql, db);
+	}
+
+	var webServer;
+	return new Promise(function(resolve) {
+		webServer = app.listen(settings.webappPort || 8001, process.env.INTERFACE, resolve);
+	}).then(function() {
+		console.log('Testreduce server listening on: %s', webServer.address().port);
+		return webServer;
+	});
 });
 
-// Main interface
-app.get(/^\/results(\/([^\/]+))?$/, resultsWebInterface);
-
-// Results for a title (on latest commit)
-app.get(/^\/latestresult\/([^\/]+)\/(.*)$/, resultWebInterface);
-
-// Results for a title on any commit
-app.get(/^\/result\/([a-f0-9]*)\/([^\/]+)\/(.*)$/, resultWebInterface);
-
-// List of failures sorted by severity
-app.get(/^\/topfails\/(\d+)$/, failsWebInterface);
-// 0th page
-app.get(/^\/topfails$/, failsWebInterface);
-
-// Overview of stats
-app.get(/^\/$/, statsWebInterface);
-app.get(/^\/stats(\/([^\/]+))?$/, statsWebInterface);
-
-// Failed fetches
-app.get(/^\/failedFetches$/, getFailedFetches);
-
-// Crashers
-app.get(/^\/crashers$/, getCrashers);
-
-// Regressions between two revisions.
-app.get(/^\/regressions\/between\/([^\/]+)\/([^\/]+)(?:\/(\d+))?$/, getRegressions);
-
-// Topfixes between two revisions.
-app.get(/^\/topfixes\/between\/([^\/]+)\/([^\/]+)(?:\/(\d+))?$/, getTopfixes);
-
-// Results for a title on a commit, flag skips/fails new since older commit
-app.get(/^\/resultFlagNew\/([a-f0-9]*)\/([a-f0-9]*)\/([^\/]+)\/(.*)$/, resultFlagNewWebInterface);
-
-// Results for a title on a commit, flag skips/fails no longer in newer commit
-app.get(/^\/resultFlagOld\/([a-f0-9]*)\/([a-f0-9]*)\/([^\/]+)\/(.*)$/, resultFlagOldWebInterface);
-
-// Distribution of fails
-app.get(/^\/failsDistr$/, getFailsDistr);
-
-// Distribution of fails
-app.get(/^\/skipsDistr$/, getSkipsDistr);
-
-if (parsoidRTConfig) {
-	parsoidRTConfig.setupEndpoints(settings, app, mysql, db, hbs);
-}
-
-if (perfConfig) {
-	perfConfig.setupEndpoints(settings, app, mysql, db, hbs);
-}
-
-// List of all commits
-app.get('/commits', getCommits);
-
-// Clients will GET this path if they want to run a test
-coordApp.get(/^\/title$/, getTitle);
-
-// Receive results from clients
-coordApp.post(/^\/result\/([^\/]+)\/([^\/]+)/, receiveResults);
-
-// Start the app
-var webappPort = settings.webappPort || 8001;
-app.listen(webappPort, function() {
-	console.log('Web app listening on: %s', webappPort);
+startCoordApp().then(startWebServer).catch(function(e) {
+	console.log('Error starting up: ' + e);
+	console.log(e.stack);
 });
-coordApp.listen(settings.coordPort || 8002);
+
+module.exports = {};
