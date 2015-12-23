@@ -1,0 +1,13 @@
+The primary contributors to this codebase are (alphabetically):
+
+Arlo Breault <abreault@wikimedia.org>
+Gabriel Wicke <gwicke@wikimedia.org>
+Mark Holmquist <mtraceur@member.fsf.org>
+Marc Ordinas i Llopis <marcoil@wikimedia.org>
+C. Scott Ananian <cscott@cscott.net>
+Subramanya Sastry <ssastry@wikimedia.org>
+
+Other contributors (alphabetically):
+
+Be <bebirchall@gmail.com>
+Luke Welling <lwelling@wikimedia.org>
