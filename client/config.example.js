@@ -1,10 +1,9 @@
 /**
- * Example configuration for the testing client.
- *
+ * Example configuration for the testreduce client.js script
  * Copy this file to config.js and change the values as needed.
  */
+
 'use strict';
-var path = require('path');
 
 (function() {
 	if (typeof module === 'object') {
@@ -20,13 +19,19 @@ var path = require('path');
 			// A unique name for this client (optional) (URL-safe characters only)
 			clientName: 'Parsoid RT testing client',
 
-			interwiki: 'en',
+			// This is the function that does the actual testing.
+			// It will be passed the testerConfig object below.
+			// It is expected to return a promise.
+			//
+			// TODO: Document format of expected results to satisfy the server
+			runTest: function(config, test) {
+				// .. run your test ..
+			},
 
-			// By default, use the same configuration as the testing Parsoid server.
-			parsoidConfig: path.resolve(__dirname, './parsoid.localsettings.js'),
-
-			// The parsoid API to use. If null, create our own server
-			parsoidURL: null,
+			testerConfig: {
+				// Any tester-specific configuration here.
+				// This object will be passed to the runTest function above.
+			},
 		};
 	}
 }());

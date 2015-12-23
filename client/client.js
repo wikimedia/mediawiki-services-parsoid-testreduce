@@ -65,25 +65,23 @@ var getTitle = function(cb) {
 };
 
 var runTest = function(cb, test) {
-	config.runTest(test).nodify(function(err, results) {
-		var callback = null;
-		if (err) {
-			// Log it to console (for gabriel to watch scroll by)
-			console.error('Error in %s:%s: %s\n%s', test.prefix, test.title,
-				err, err.stack || '');
-			/*
-			 * If you're looking at the line below and thinking "Why in the
-			 * hell would they have done that, it causes unnecessary problems
-			 * with the clients crashing", you're absolutely right. This is
-			 * here because we use a supervisor instance to run our test
-			 * clients, and we rely on it to restart dead'ns.
-			 *
-			 * In sum, easier to die than to worry about having to reset any
-			 * broken application state.
-			 */
-			callback = function() { process.exit(1); };
-		}
-		cb('postResult', err, results, test, callback);
+	config.runTest(config.testerConfig, test).then(function(results) {
+		cb('postResult', null, results, test, null);
+	}).catch(function(err) {
+		// Log it to console
+		console.error('Error in %s:%s: %s\n%s', test.prefix, test.title, err, err.stack || '');
+
+		/*
+		 * If you're looking at the line below and thinking "Why in the
+		 * hell would they have done that, it causes unnecessary problems
+		 * with the clients crashing", you're absolutely right. This is
+		 * here because we use a supervisor instance to run our test
+		 * clients, and we rely on it to restart dead'ns.
+		 *
+		 * In sum, easier to die than to worry about having to reset any
+		 * broken application state.
+		 */
+		cb('postResult', err, null, test,  function() { process.exit(1); });
 	});
 };
 
