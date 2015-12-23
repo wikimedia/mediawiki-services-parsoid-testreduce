@@ -10,7 +10,6 @@ var request = require('request');
 var cluster = require('cluster');
 var exec = require('child_process').exec;
 var Utils = require('../utils/Utils.js').Utils;
-var apiServer = require('../apiServer.js');
 
 var commit;
 var ctime;
@@ -20,8 +19,6 @@ var lastCommitCheck;
 var repoPath = __dirname;
 
 var config = require(process.argv[2] || './config.js');
-var parsoidURL = config.parsoidURL;
-var rtTest = require('../../bin/roundtrip-test.js');
 
 var getTitle = function(cb) {
 	var requestOptions = {
@@ -68,12 +65,7 @@ var getTitle = function(cb) {
 };
 
 var runTest = function(cb, test) {
-	rtTest.runTests(test.title, {
-		setup: require(config.parsoidConfig).setup,
-		prefix: test.prefix,
-		rtTestMode: true,
-		parsoidURL: parsoidURL,
-	}, rtTest.xmlFormat).nodify(function(err, results) {
+	config.runTest(test).nodify(function(err, results) {
 		var callback = null;
 		if (err) {
 			// Log it to console (for gabriel to watch scroll by)
@@ -232,22 +224,5 @@ if (module && !module.parent) {
 		heapdump.writeSnapshot();
 	});
 
-	if (!config.parsoidURL) {
-		// If no Parsoid server was passed, start our own
-		apiServer.startParsoidServer({
-			serverArgv: [
-				// We want the cluster master so that timeouts on stuck titles
-				// lead to a restart.
-				'--num-workers', '1',
-				'--config', config.parsoidConfig,
-			],
-			quiet: true,
-		}).then(function(ret) {
-			parsoidURL = ret.url;
-			return getGitCommit().spread(getGitCommitCb);
-		}).done();
-		apiServer.exitOnProcessTerm();
-	} else {
-		getGitCommit().spread(getGitCommitCb).done();
-	}
+	getGitCommit().spread(getGitCommitCb).done();
 }
