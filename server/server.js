@@ -1,16 +1,16 @@
 #!/usr/bin/env node
 "use strict";
-require('../../core-upgrade.js');
+require('../core-upgrade.js');
 
 var bodyParser = require('body-parser');
 var busboy = require('connect-busboy');
 var express = require('express');
 var yargs = require('yargs');
 var ehbs = require('express-handlebars');
+var path = require('path');
 var Diff = require('./diff.js').Diff;
 var RH = require('./render.helpers.js').RenderHelpers;
-var path = require('path');
-var Promise = require('../../lib/utils/promise.js');
+var Promise = require('../utils/promise.js');
 
 // Default options
 var defaults = {

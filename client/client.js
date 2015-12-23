@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-require('../../core-upgrade.js');
+require('../core-upgrade.js');
 
 /**
  * A client for testing round-tripping of articles.
@@ -9,9 +9,8 @@ require('../../core-upgrade.js');
 var request = require('request');
 var cluster = require('cluster');
 var exec = require('child_process').exec;
+var Utils = require('../utils/Utils.js').Utils;
 var apiServer = require('../apiServer.js');
-var Util = require('../../lib/utils/Util.js').Util;
-var JSUtils = require('../../lib/utils/jsutils.js').JSUtils;
 
 var commit;
 var ctime;
@@ -65,7 +64,7 @@ var getTitle = function(cb) {
 		}
 	};
 
-	Util.retryingHTTPRequest(10, requestOptions, callback);
+	Utils.retryingHTTPRequest(10, requestOptions, callback);
 };
 
 var runTest = function(cb, test) {
@@ -103,7 +102,7 @@ var runTest = function(cb, test) {
  */
 var getGitCommit = function(cb) {
 	var now = Date.now();
-	cb = JSUtils.mkPromised(cb, true);
+	cb = Utils.mkPromised(cb, true);
 
 	if (!lastCommitCheck || (now - lastCommitCheck) > (5 * 60 * 1000)) {
 		lastCommitCheck = now;

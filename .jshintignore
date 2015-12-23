@@ -1,0 +1,5 @@
+coverage
+doc
+node_modules
+lib/wt2html/mediawiki.tokenizer.js
+server/static/js/jquery-min.js
