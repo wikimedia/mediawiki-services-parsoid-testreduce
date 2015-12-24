@@ -5,11 +5,11 @@ require('../core-upgrade.js');
 /**
  * A client for testing round-tripping of articles.
  */
-
 var request = require('request');
 var cluster = require('cluster');
 var exec = require('child_process').exec;
 var Utils = require('../utils/Utils.js').Utils;
+var Promise = require('../utils/promise.js');
 
 var commit;
 var ctime;
@@ -84,49 +84,53 @@ var runTest = function(cb, test) {
 	});
 };
 
-var defaultGitCommitFetch = function(repoPath, cb) {
-	exec('git log --max-count=1 --pretty=format:"%H %ci"', { cwd: repoPath }, function(err, data) {
-		if (err) { return cb(err); }
-		var cobj = data.match(/^([^ ]+) (.*)$/);
-		if (!cobj) {
-			return cb("Error, couldn't find the current commit", null, null);
-		} else {
-			lastCommit = cobj[1];
-			// convert the timestamp to UTC
-			lastCommitTime = new Date(cobj[2]).toISOString();
-			// console.log( 'New commit: ', cobj[1], lastCommitTime );
-			cb(null, cobj[1], lastCommitTime);
-		}
+var defaultGitCommitFetch = function(repoPath) {
+	return new Promise(function(resolve, reject) {
+		exec('git log --max-count=1 --pretty=format:"%H %ci"', { cwd: repoPath }, function(err, data) {
+			if (err) {
+				reject(err);
+				return;
+			}
+
+			var cobj = data.match(/^([^ ]+) (.*)$/);
+			if (!cobj) {
+				reject("Error, couldn't find the current commit");
+			} else {
+				lastCommit = cobj[1];
+				// convert the timestamp to UTC
+				lastCommitTime = new Date(cobj[2]).toISOString();
+				// console.log( 'New commit: ', cobj[1], lastCommitTime );
+				resolve([cobj[1], lastCommitTime]);
+			}
+		});
 	});
 };
 
 /**
  * Get the current git commit hash.
- * The `cb` parameter is optional; return a promise for the result
- * as an array: [lastCommit, lastCommitTime].
+ * Returns a fulfillment promise.
+ * Checks for updated code every 5 minutes.
  */
-var getGitCommit = function(cb) {
+var getGitCommit = function() {
+	var p;
 	var now = Date.now();
-	cb = Utils.mkPromised(cb, true);
-
 	if (!lastCommitCheck || (now - lastCommitCheck) > (5 * 60 * 1000)) {
 		lastCommitCheck = now;
 		if (config.gitCommitFetch) {
-			config.gitCommitFetch(config.opts, cb);
+			p = config.gitCommitFetch(config.opts);
 		} else {
-			defaultGitCommitFetch(config.gitRepoPath, cb);
+			p = defaultGitCommitFetch(config.gitRepoPath);
 		}
 	} else {
-		cb(null, lastCommit, lastCommitTime);
+		p = Promise.resolve([lastCommit, lastCommitTime]);
 	}
-	return cb.promise;
+	return p;
 };
 
 var postResult = function(err, result, test, finalCB, cb) {
-	getGitCommit(function(err2, newCommit, newTime) {
-		if (err2 || !newCommit) {
-			console.log("Exiting, couldn't find the current commit");
-			process.exit(1);
+	getGitCommit().then(function(res) {
+		if (!res[0]) {
+			throw new Error('');
 		}
 
 		if (err) {
@@ -139,8 +143,8 @@ var postResult = function(err, result, test, finalCB, cb) {
 		var uri = 'http://' + config.server.host + ":" + config.server.port + '/result/' + encodeURIComponent(test.title) + '/' + test.prefix;
 		var form = {
 			results: result,
-			commit: newCommit,
-			ctime: newTime,
+			commit: res[0],
+			ctime: res[1],
 			test: test,
 		};
 		var postOpts = {
@@ -153,9 +157,9 @@ var postResult = function(err, result, test, finalCB, cb) {
 			form: form,
 		};
 
-		request(postOpts, function(err3, res) {
-			if (err3) {
-				console.log("Error processing posted result: " + err3);
+		request(postOpts, function(err2) {
+			if (err2) {
+				console.log("Error processing posted result: " + err2);
 				console.log("Posted form: " + JSON.stringify(form));
 			}
 			if (finalCB) {
@@ -164,6 +168,10 @@ var postResult = function(err, result, test, finalCB, cb) {
 				cb('start');
 			}
 		});
+	}).catch(function(err3) {
+		console.log("Exiting, couldn't find the current commit.");
+		console.log("Error: " + err3 + "; stack: " + err3.stack);
+		process.exit(1);
 	});
 };
 
@@ -186,17 +194,16 @@ var callbackOmnibus = function(which) {
 			break;
 
 		case 'start':
-			getGitCommit(function(err, latestCommit) {
-				if (err) {
-					console.log("Couldn't find latest commit.", err);
-					process.exit(1);
-				}
-				if (latestCommit !== commit) {
+			getGitCommit().then(function(res) {
+				if (res[0] !== commit) {
 					console.log('Exiting because the commit hash changed');
 					process.exit(0);
 				}
 
 				getTitle(callbackOmnibus);
+			}).catch(function(err) {
+				console.log("Couldn't find latest commit.", err);
+				process.exit(1);
 			});
 			break;
 
