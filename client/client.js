@@ -16,7 +16,6 @@ var ctime;
 var lastCommit;
 var lastCommitTime;
 var lastCommitCheck;
-var repoPath = __dirname;
 
 var config = require(process.argv[2] || './config.js');
 
@@ -65,7 +64,7 @@ var getTitle = function(cb) {
 };
 
 var runTest = function(cb, test) {
-	config.runTest(config.testerConfig, test).then(function(results) {
+	config.runTest(config.opts, test).then(function(results) {
 		cb('postResult', null, results, test, null);
 	}).catch(function(err) {
 		// Log it to console
@@ -85,6 +84,22 @@ var runTest = function(cb, test) {
 	});
 };
 
+var defaultGitCommitFetch = function(repoPath, cb) {
+	exec('git log --max-count=1 --pretty=format:"%H %ci"', { cwd: repoPath }, function(err, data) {
+		if (err) { return cb(err); }
+		var cobj = data.match(/^([^ ]+) (.*)$/);
+		if (!cobj) {
+			return cb("Error, couldn't find the current commit", null, null);
+		} else {
+			lastCommit = cobj[1];
+			// convert the timestamp to UTC
+			lastCommitTime = new Date(cobj[2]).toISOString();
+			// console.log( 'New commit: ', cobj[1], lastCommitTime );
+			cb(null, cobj[1], lastCommitTime);
+		}
+	});
+};
+
 /**
  * Get the current git commit hash.
  * The `cb` parameter is optional; return a promise for the result
@@ -96,19 +111,11 @@ var getGitCommit = function(cb) {
 
 	if (!lastCommitCheck || (now - lastCommitCheck) > (5 * 60 * 1000)) {
 		lastCommitCheck = now;
-		exec('git log --max-count=1 --pretty=format:"%H %ci"', { cwd: repoPath }, function(err, data) {
-			if (err) { return cb(err); }
-			var cobj = data.match(/^([^ ]+) (.*)$/);
-			if (!cobj) {
-				return cb("Error, couldn't find the current commit", null, null);
-			} else {
-				lastCommit = cobj[1];
-				// convert the timestamp to UTC
-				lastCommitTime = new Date(cobj[2]).toISOString();
-				// console.log( 'New commit: ', cobj[1], lastCommitTime );
-				cb(null, cobj[1], lastCommitTime);
-			}
-		});
+		if (config.gitCommitFetch) {
+			config.gitCommitFetch(config.opts, cb);
+		} else {
+			defaultGitCommitFetch(config.gitRepoPath, cb);
+		}
 	} else {
 		cb(null, lastCommit, lastCommitTime);
 	}
