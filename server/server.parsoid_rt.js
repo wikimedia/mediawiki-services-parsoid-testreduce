@@ -114,7 +114,7 @@ function setupEndpoints(settings, app, mysql, db, hbs) {
 		var page = (req.params[2] || 0) - 0;
 		var offset = page * 40;
 		var relativeUrlPrefix = '../../../';
-		db.query (dbNumOneDiffRegressionsBetweenRevs, [r2, r1, numFails, numSkips], function(err, row) {
+		db.query(dbNumOneDiffRegressionsBetweenRevs, [r2, r1, numFails, numSkips], function(err, row) {
 			if (err) {
 				res.send(err.toString(), 500);
 			} else {

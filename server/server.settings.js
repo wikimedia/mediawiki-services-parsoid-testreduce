@@ -62,8 +62,8 @@ module.exports = {
 	},
 
 	// (Optional)
-	// perfConfig: require('./server.perf_stats.js').perfConfig,
+	perfConfig: require('./server.perf_stats.js').perfConfig,
 
 	// (Optional)
-	// parsoidRTConfig: require('./server.parsoid_rt.js').parsoidRTConfig,
+	parsoidRTConfig: require('./server.parsoid_rt.js').parsoidRTConfig,
 };

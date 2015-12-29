@@ -641,7 +641,7 @@ var receiveResults = function(req, res) {
 	res.setHeader('Content-Type', 'text/plain; charset=UTF-8');
 
 	var trans = db.startTransaction();
-	var transUpdateCB = function(type, successCb, err, result) {
+	var transUpdateCB = function(type, successCb, err, result2) {
 		if (err) {
 			trans.rollback();
 			var msg = "Error inserting/updating " + type + " for page: " +  prefix + ':' + title + " and hash: " + commitHash;
@@ -651,7 +651,7 @@ var receiveResults = function(req, res) {
 				res.status(500).send(msg);
 			}
 		} else if (successCb) {
-			successCb(result);
+			successCb(result2);
 		}
 	};
 
@@ -696,7 +696,7 @@ var receiveResults = function(req, res) {
 
 										if (perfConfig) {
 											// Insert the performance stats, ignoring errors for now
-											perfConfig.insertPerfStats(db, page.id, commitHash, perfstats, null);
+											perfConfig.insertPerfStats(db, page.id, commitHash, perfstats, function() {});
 										}
 
 										// Maybe the perfstats aren't committed yet, but it shouldn't be a problem
