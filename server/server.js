@@ -601,20 +601,6 @@ var statsScore = function(skipCount, failCount, errorCount) {
 	return errorCount * 1000000 + failCount * 1000 + skipCount;
 };
 
-var transUpdateCB = function(title, prefix, hash, type, res, trans, successCb, err, result) {
-	if (err) {
-		trans.rollback();
-		var msg = "Error inserting/updating " + type + " for page: " +  prefix + ':' + title + " and hash: " + hash;
-		console.error(msg);
-		console.error(err);
-		if (res) {
-			res.status(500).send(msg);
-		}
-	} else if (successCb) {
-		successCb(result);
-	}
-};
-
 var receiveResults = function(req, res) {
 	req.connection.setTimeout(300 * 1000);
 	var title = req.params[0];
@@ -655,13 +641,27 @@ var receiveResults = function(req, res) {
 	res.setHeader('Content-Type', 'text/plain; charset=UTF-8');
 
 	var trans = db.startTransaction();
+	var transUpdateCB = function(type, successCb, err, result) {
+		if (err) {
+			trans.rollback();
+			var msg = "Error inserting/updating " + type + " for page: " +  prefix + ':' + title + " and hash: " + commitHash;
+			console.error(msg);
+			console.error(err);
+			if (res) {
+				res.status(500).send(msg);
+			}
+		} else if (successCb) {
+			successCb(result);
+		}
+	};
+
 	// console.warn("got: " + JSON.stringify([title, commitHash, result, skipCount, failCount, errorCount]));
 	if (errorCount > 0 && dneError) {
 		// Page fetch error, increment the fetch error count so, when it goes
 		// over maxFetchRetries, it won't be considered for tests again.
 		console.log('XX', prefix + ':' + title);
 		trans.query(dbIncrementFetchErrorCount, [commitHash, title, prefix],
-			transUpdateCB.bind(null, title, prefix, commitHash, "page fetch error count", res, trans, null))
+				transUpdateCB.bind(null, "page fetch error count", null))
 			.commit(function(err) {
 				if (err) {
 					console.error("Error incrementing fetch count: " + err.toString());
@@ -680,29 +680,28 @@ var receiveResults = function(req, res) {
 				var latestStatId = 0;
 				// Insert the result
 				trans.query(dbInsertResult, [ page.id, commitHash, resultString ],
-					transUpdateCB.bind(null, title, prefix, commitHash, "result", res, trans, function(insertedResult) {
+					transUpdateCB.bind(null, "result", function(insertedResult) {
 						latestResultId = insertedResult.insertId;
 						// Insert the stats
 						trans.query(dbInsertStats, [ skipCount, failCount, errorCount, selserErrorCount, score, page.id, commitHash ],
-							transUpdateCB.bind(null, title, prefix, commitHash, "stats", res, trans, function(insertedStat) {
+							transUpdateCB.bind(null, "stats", function(insertedStat) {
 								latestStatId = insertedStat.insertId;
 
 								// And now update the page with the latest info
 								trans.query(dbUpdatePageLatestResults, [ latestStatId, score, latestResultId, commitHash, page.id ],
-									transUpdateCB.bind(null, title, prefix, commitHash, "latest result", res, trans, function() {
-										trans.commit(function() {
-											console.log('<- ', prefix + ':' + title, ':', skipCount, failCount,
-												errorCount, commitHash.substr(0, 7));
+										transUpdateCB.bind(null, "latest result", null))
+									.commit(function() {
+										console.log('<- ', prefix + ':' + title, ':', skipCount, failCount,
+											errorCount, commitHash.substr(0, 7));
 
-											if (perfConfig) {
-												// Insert the performance stats, ignoring errors for now
-												perfConfig.insertPerfStats(db, page.id, commitHash, perfstats, null);
-											}
+										if (perfConfig) {
+											// Insert the performance stats, ignoring errors for now
+											perfConfig.insertPerfStats(db, page.id, commitHash, perfstats, null);
+										}
 
-											// Maybe the perfstats aren't committed yet, but it shouldn't be a problem
-											res.status(200).send('');
-										});
-									}));
+										// Maybe the perfstats aren't committed yet, but it shouldn't be a problem
+										res.status(200).send('');
+									});
 							}));
 					}));
 			} else {
