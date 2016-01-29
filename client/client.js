@@ -96,11 +96,8 @@ var defaultGitCommitFetch = function(repoPath) {
 			if (!cobj) {
 				reject("Error, couldn't find the current commit");
 			} else {
-				lastCommit = cobj[1];
 				// convert the timestamp to UTC
-				lastCommitTime = new Date(cobj[2]).toISOString();
-				// console.log( 'New commit: ', cobj[1], lastCommitTime );
-				resolve([cobj[1], lastCommitTime]);
+				resolve([cobj[1], new Date(cobj[2]).toISOString()]);
 			}
 		});
 	});
@@ -196,7 +193,9 @@ var callbackOmnibus = function(which) {
 		case 'start':
 			getGitCommit().then(function(res) {
 				if (res[0] !== commit) {
-					console.log('Exiting because the commit hash changed');
+					console.log('Exiting because the commit hash change.' +
+						'Expected: ' + commit +
+						'Got: ' + res[0]);
 					process.exit(0);
 				}
 
@@ -220,8 +219,8 @@ if (typeof module === 'object') {
 
 if (module && !module.parent) {
 	var getGitCommitCb = function(commitHash, commitTime) {
-		commit = commitHash;
-		ctime = commitTime;
+		lastCommit = commit = commitHash;
+		lastCommitTime = ctime = commitTime;
 		callbackOmnibus('start');
 	};
 
