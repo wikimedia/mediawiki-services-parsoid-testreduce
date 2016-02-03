@@ -7,7 +7,7 @@ var path = require('path');
 
 var opts = require('yargs')
 	.default({
-		// By default, start one rtclient + api server per core.
+		// By default, start one client + api server per core.
 		c: require('os').cpus().length,
 	})
 	.alias('c', 'children').argv;
@@ -20,7 +20,7 @@ if (!module.parent) {
 		args: opts._,
 	});
 
-	console.log("rtclient-cluster initializing", numClients, "rtclients");
+	console.log("client-cluster initializing", numClients, " testreduce clients");
 	for (var i = 0; i < numClients; i++) {
 		cluster.fork();
 	}
@@ -28,20 +28,20 @@ if (!module.parent) {
 	cluster.on('exit', function(worker, code, signal) {
 		if (!worker.suicide) {
 			var exitCode = worker.process.exitCode;
-			console.log('rtclient', worker.process.pid,
+			console.log('client', worker.process.pid,
 				'died (' + exitCode + '), restarting.');
 			cluster.fork();
 		}
 	});
 
 	var shutdownCluster = function() {
-		console.log('rtclient cluster shutting down, killing all rtclients');
+		console.log('client cluster shutting down, killing all testreduce clients');
 		var workers = cluster.workers;
 		Object.keys(workers).forEach(function(id) {
-			console.log('Killing rtclient', id);
+			console.log('Killing client', id);
 			workers[id].kill('SIGKILL');
 		});
-		console.log('Done killing rtclients, exiting rtclient-cluster.');
+		console.log('Done killing testreduce clients, exiting client-cluster.');
 		process.exit(0);
 	};
 
