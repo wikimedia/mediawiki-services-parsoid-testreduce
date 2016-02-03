@@ -16,9 +16,9 @@ var Promise = require('../utils/promise.js');
 var defaults = {
 	'host':           'localhost',
 	'port':           3306,
-	'database':       'parsoid',
-	'user':           'parsoid',
-	'password':       'parsoidpw',
+	'database':       'testreduce',
+	'user':           'testreduce',
+	'password':       'testreduce',
 	'debug':          false,
 	'fetches':        6,
 	'tries':          6,
