@@ -12,9 +12,9 @@ var yargs = require('yargs');
 var defaults = {
 	'host':     'localhost',
 	'port':     3306,
-	'database': 'parsoid',
-	'user':     'parsoid',
-	'password': 'parsoidpw',
+	'database': 'testreduce',
+	'user':     'testreduce',
+	'password': 'testreduce',
 };
 
 // Settings file
