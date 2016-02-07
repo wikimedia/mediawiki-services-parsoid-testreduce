@@ -1157,6 +1157,12 @@ var startCoordApp = Promise.method(function() {
 			fieldSize: 1000000,
 		},
 	}));
+
+	// application/json
+	coordApp.use(bodyParser.json({
+		limit: 100000,
+	}));
+
 	coordApp.use(function(req, res, next) {
 		req.body = req.body || {};
 		if (!req.busboy) {

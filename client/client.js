@@ -141,23 +141,28 @@ var postResult = function(err, result, test, finalCB, cb) {
 			}
 		}
 
-		var uri = 'http://' + config.server.host + ":" + config.server.port + '/result/' + encodeURIComponent(test.title) + '/' + test.prefix;
+		var postOpts = {
+			uri: 'http://' + config.server.host + ":" + config.server.port + '/result/' + encodeURIComponent(test.title) + '/' + test.prefix,
+			method: 'POST',
+			headers: {
+				'Connection': 'close',
+			},
+		};
+
 		var out = {
 			results: result,
 			commit: res[0],
 			ctime: res[1],
 			test: test,
 		};
-		var postOpts = {
-			uri: uri,
-			method: 'POST',
-			headers: {
-				'Connection': 'close',
-			},
-			form: out,
-		};
 
-		postOpts.headers.contentType = config.postJSON ? 'application/json' : 'application/x-www-form-urlencoded';
+		if (config.postJSON) {
+			postOpts.headers['Content-Type'] = 'application/json; charset=utf-8';
+			postOpts.body = JSON.stringify(out);
+		} else {
+			postOpts.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+			postOpts.form = out;
+		}
 
 		request(postOpts, function(err2) {
 			if (err2) {
