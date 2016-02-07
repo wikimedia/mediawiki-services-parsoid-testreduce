@@ -127,18 +127,22 @@ var getGitCommit = function() {
 var postResult = function(err, result, test, finalCB, cb) {
 	getGitCommit().then(function(res) {
 		if (!res[0]) {
-			throw new Error('');
+			throw new Error('Could not find the current commit.');
 		}
 
 		if (err) {
-			result =
-				'<error type="' + err.name + '">' +
-				err.toString() +
-				'</error>';
+			if (config.postJSON) {
+				result.err = { name: err.name, msg: err.toString() };
+			} else {
+				result =
+					'<error type="' + err.name + '">' +
+					err.toString() +
+					'</error>';
+			}
 		}
 
 		var uri = 'http://' + config.server.host + ":" + config.server.port + '/result/' + encodeURIComponent(test.title) + '/' + test.prefix;
-		var form = {
+		var out = {
 			results: result,
 			commit: res[0],
 			ctime: res[1],
@@ -148,16 +152,17 @@ var postResult = function(err, result, test, finalCB, cb) {
 			uri: uri,
 			method: 'POST',
 			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded',
 				'Connection': 'close',
 			},
-			form: form,
+			form: out,
 		};
+
+		postOpts.headers.contentType = config.postJSON ? 'application/json' : 'application/x-www-form-urlencoded';
 
 		request(postOpts, function(err2) {
 			if (err2) {
 				console.log("Error processing posted result: " + err2);
-				console.log("Posted form: " + JSON.stringify(form));
+				console.log("Posted form: " + JSON.stringify(out));
 			}
 			if (finalCB) {
 				finalCB();
