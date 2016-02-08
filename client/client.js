@@ -132,7 +132,9 @@ var postResult = function(err, result, test, finalCB, cb) {
 
 		if (err) {
 			if (config.postJSON) {
-				result.err = { name: err.name, msg: err.toString() };
+				result = {
+					err: { name: err.name, msg: err.toString(), },
+				};
 			} else {
 				result =
 					'<error type="' + err.name + '">' +
@@ -176,7 +178,6 @@ var postResult = function(err, result, test, finalCB, cb) {
 			}
 		});
 	}).catch(function(err3) {
-		console.log("Exiting, couldn't find the current commit.");
 		console.log("Error: " + err3 + "; stack: " + err3.stack);
 		process.exit(1);
 	});
