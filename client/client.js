@@ -115,6 +115,11 @@ var getGitCommit = function() {
 		lastCommitCheck = now;
 		if (config.gitCommitFetch) {
 			p = config.gitCommitFetch(config.opts);
+			// If we got a fixed string, construct
+			// an immediately resolved promise.
+			if (typeof p === 'string') {
+				p = Promise.resolve([p, new Date().toISOString()]);
+			}
 		} else {
 			p = defaultGitCommitFetch(config.gitRepoPath);
 		}
