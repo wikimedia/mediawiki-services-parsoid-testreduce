@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 'use strict';
 require('../../core-upgrade.js');
 var fs = require('fs');
