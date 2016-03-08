@@ -1,18 +1,26 @@
 #!/bin/bash
 
-#---- wikis ----
-LANG="enwiki dewiki nlwiki frwiki itwiki ruwiki eswiki svwiki plwiki jawiki arwiki hewiki hiwiki kowiki zhwiki"
-HOWMANY=(30 10 10 10 10 10 10 8 8 8 7 7 7 7 5)
+#---- wikipedia ----
+LANG="enwiki dewiki nlwiki frwiki itwiki ruwiki eswiki ptwiki plwiki hewiki svwiki jawiki arwiki hiwiki kowiki zhwiki"
+HOWMANY=(150 50 50 50 50 50 50 30 30 20 10 10 10 10 10 10)
 # link prefix languages
 LANG=$LANG" ckbwiki cuwiki cvwiki hywiki iswiki kaawiki kawiki lbewiki lnwiki mznwiki pnbwiki ukwiki uzwiki"
-HOWMANY=("${HOWMANY[@]}" 1 1 1 1 1 1 1 1 1 1 1 1 1)
+HOWMANY=("${HOWMANY[@]}" 2 2 2 2 2 2 2 2 2 2 2 2 2)
 
-#---- wiktionaries ----
-LANG=$LANG" enwiktionary frwiktionary"
-HOWMANY=("${HOWMANY[@]}" 1 1)
+#---- wiktionary ----
+LANG=$LANG" enwiktionary frwiktionary itwiktionary eswiktionary"
+HOWMANY=("${HOWMANY[@]}" 2 2 2 2)
+
+#---- wikisource ----
+LANG=$LANG" enwikisource frwikisource itwikisource eswikisource"
+HOWMANY=("${HOWMANY[@]}" 2 2 2 2)
+
+#---- wikivoyage ----
+LANG=$LANG" enwikivoyage frwikivoyage itwikivoyage eswikivoyage"
+HOWMANY=("${HOWMANY[@]}" 2 2 2 2)
 
 i=0
-FRACTION=700;
+FRACTION=$[100*2/3];
 for l in $LANG ; do
 	n=${HOWMANY[$i]}
 	suffix=".random_titles.txt"
