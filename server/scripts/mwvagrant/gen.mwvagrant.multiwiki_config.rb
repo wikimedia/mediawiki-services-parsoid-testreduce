@@ -10,6 +10,7 @@ EOF
 wikis = "arwiki ckbwiki cuwiki cvwiki dewiki enwiki enwikisource enwikivoyage enwiktionary eswiki eswikisource eswikivoyage eswiktionary frwiki frwikisource frwikivoyage frwiktionary hewiki hiwiki hywiki iswiki itwiki itwikisource itwikivoyage itwiktionary jawiki kaawiki kawiki kowiki lbewiki lnwiki mznwiki nlwiki plwiki pnbwiki ptwiki ruwiki svwiki ukwiki uzwiki zhwiki".split(' ')
 wikis.each do |s|
    prefix = s.gsub(/wiki$/, '')
+   langcode = s.gsub(/wikisource|wiktionary|wikivoyage|wiki/, '')
    type = case s
       when /wiki$/      then "Wikipedia"
       when /wikisource/ then "Wikisource"
@@ -21,10 +22,11 @@ wikis.each do |s|
        mediawiki::settings { '#{prefix} settings':
        wiki   => '#{prefix}',
          values => [
-            '$wgLanguageCode = "#{prefix}";',
+            '$wgLanguageCode = "#{langcode}";',
             '$wgSitename     = "#{type}";',
             '$wgUseInstantCommons = true;',
             '$wgUseTidy = true;',
+            '$wgDebugLogGroups = [];',
          ]
      }
 EOF
