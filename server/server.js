@@ -1214,7 +1214,7 @@ var startWebServer = Promise.method(function() {
 	app.get(/^\/latestresult\/([^\/]+)\/(.*)$/, resultWebInterface);
 
 	// Results for a title on any commit
-	app.get(/^\/result\/([a-f0-9]*)\/([^\/]+)\/(.*)$/, resultWebInterface);
+	app.get(/^\/result\/([\w\-_]*)\/([^\/]+)\/(.*)$/, resultWebInterface);
 
 	// List of failures sorted by severity
 	app.get(/^\/topfails\/(\d+)$/, failsWebInterface);
