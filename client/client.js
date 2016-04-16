@@ -67,10 +67,28 @@ var getTitle = function(cb) {
 	Utils.retryingHTTPRequest(10, requestOptions, callback);
 };
 
-var runTest = function(cb, test) {
+var runTest = function(cb, test, retryCount) {
+	// Abort test if no result is returned in this timeframe.
+	// Default: 5 minutes.
+	// Add a random (max 500ms) shift in case multiple testreduce
+	// clients fails and they don't all retry in lockstep fashion.
+	var timeoutVal = Math.round(Math.random()*500) + (config.opts.testTimeout || 5*60*1000);
 	config.runTest(config.opts, test).then(function(results) {
 		cb('postResult', null, results, test, null);
-	}).catch(function(err) {
+	})
+	.timeout(timeoutVal)
+	.catch(function(err) {
+		// SSS FIXME: We need to really check that
+		// error here is a promise timeout error.
+		var maxRetries = config.opts.maxRetries || 1;
+		if (retryCount === undefined) {
+			retryCount = 0;
+		}
+		if (retryCount < maxRetries) {
+			runTest(cb, test, retryCount + 1);
+			return;
+		}
+
 		// Log it to console
 		console.error(pidPrefix + 'Error in %s:%s: %s\n%s', test.prefix, test.title, err, err.stack || '');
 
