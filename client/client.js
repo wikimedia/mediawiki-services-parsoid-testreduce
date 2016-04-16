@@ -177,8 +177,8 @@ var postResult = function(err, result, test, finalCB, cb) {
 
 		request(postOpts, function(err2) {
 			if (err2) {
-				logger("Error processing posted result: " + err2);
-				logger("Posted form: " + JSON.stringify(out));
+				logger('Error processing posted result: ' + err2);
+				logger('Posted form: ' + JSON.stringify(out));
 			}
 			if (finalCB) {
 				finalCB();
@@ -198,14 +198,14 @@ var callbackOmnibus = function(which) {
 	switch (args.shift()) {
 		case 'runTest':
 			test = args[0];
-			logger(pidPrefix + 'Running a test on', test.prefix + ':' + test.title, '....');
+			logger(pidPrefix + 'Running a test on ' + test.prefix + ':' + test.title + ' ....');
 			args.unshift(callbackOmnibus);
 			runTest.apply(null, args);
 			break;
 
 		case 'postResult':
 			test = args[2];
-			logger(pidPrefix + 'Posting a result for', test.prefix + ':' + test.title, '....');
+			logger(pidPrefix + 'Posting a result for ' + test.prefix + ':' + test.title + ' ....');
 			args.push(callbackOmnibus);
 			postResult.apply(null, args);
 			break;
@@ -213,15 +213,15 @@ var callbackOmnibus = function(which) {
 		case 'start':
 			getGitCommit().then(function(res) {
 				if (res[0] !== commit) {
-					logger('Exiting because the commit hash change.' +
+					logger('Exiting because the commit hash change. ' +
 						'Expected: ' + commit +
-						'Got: ' + res[0]);
+						'; Got: ' + res[0]);
 					process.exit(0);
 				}
 
 				getTitle(callbackOmnibus);
 			}).catch(function(err) {
-				logger('Could not find latest commit.', err);
+				logger('Could not find latest commit. ' + err);
 				process.exit(1);
 			});
 			break;
