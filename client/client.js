@@ -19,6 +19,10 @@ var lastCommitCheck;
 
 var config = require(process.argv[2] || './config.js');
 
+var pidPrefix = '[' + process.pid + ']: ';
+
+var logger = function(msg) { console.log(pidPrefix + msg); };
+
 var getTitle = function(cb) {
 	var requestOptions = {
 		uri: 'http://' + config.server.host + ':' +
@@ -39,11 +43,11 @@ var getTitle = function(cb) {
 				cb('runTest', resp);
 				break;
 			case 404:
-				console.log('The server doesn\'t have any work for us right now, waiting half a minute....');
+				logger('The server does not have any work for us right now, waiting half a minute....');
 				setTimeout(function() { cb('start'); }, 30000);
 				break;
 			case 426:
-				console.log("Update required, exiting.");
+				logger('Update required, exiting.');
 				// Signal our voluntary suicide to the parent if running as a
 				// cluster worker, so that it does not restart this client.
 				// Without this, the code is never actually updated as a newly
@@ -55,7 +59,7 @@ var getTitle = function(cb) {
 				}
 				break;
 			default:
-				console.log('There was some error (' + response.statusCode + '), but that is fine. Waiting 15 seconds to resume....');
+				logger('There was some error (' + response.statusCode + '), but that is fine. Waiting 15 seconds to resume....');
 				setTimeout(function() { cb('start'); }, 15000);
 		}
 	};
@@ -68,7 +72,7 @@ var runTest = function(cb, test) {
 		cb('postResult', null, results, test, null);
 	}).catch(function(err) {
 		// Log it to console
-		console.error('Error in %s:%s: %s\n%s', test.prefix, test.title, err, err.stack || '');
+		console.error(pidPrefix + 'Error in %s:%s: %s\n%s', test.prefix, test.title, err, err.stack || '');
 
 		/*
 		 * If you're looking at the line below and thinking "Why in the
@@ -173,8 +177,8 @@ var postResult = function(err, result, test, finalCB, cb) {
 
 		request(postOpts, function(err2) {
 			if (err2) {
-				console.log("Error processing posted result: " + err2);
-				console.log("Posted form: " + JSON.stringify(out));
+				logger("Error processing posted result: " + err2);
+				logger("Posted form: " + JSON.stringify(out));
 			}
 			if (finalCB) {
 				finalCB();
@@ -183,7 +187,7 @@ var postResult = function(err, result, test, finalCB, cb) {
 			}
 		});
 	}).catch(function(err3) {
-		console.log("Error: " + err3 + "; stack: " + err3.stack);
+		logger('Error: ' + err3 + '; stack: ' + err3.stack);
 		process.exit(1);
 	});
 };
@@ -194,14 +198,14 @@ var callbackOmnibus = function(which) {
 	switch (args.shift()) {
 		case 'runTest':
 			test = args[0];
-			console.log('Running a test on', test.prefix + ':' + test.title, '....');
+			logger(pidPrefix + 'Running a test on', test.prefix + ':' + test.title, '....');
 			args.unshift(callbackOmnibus);
 			runTest.apply(null, args);
 			break;
 
 		case 'postResult':
 			test = args[2];
-			console.log('Posting a result for', test.prefix + ':' + test.title, '....');
+			logger(pidPrefix + 'Posting a result for', test.prefix + ':' + test.title, '....');
 			args.push(callbackOmnibus);
 			postResult.apply(null, args);
 			break;
@@ -209,7 +213,7 @@ var callbackOmnibus = function(which) {
 		case 'start':
 			getGitCommit().then(function(res) {
 				if (res[0] !== commit) {
-					console.log('Exiting because the commit hash change.' +
+					logger('Exiting because the commit hash change.' +
 						'Expected: ' + commit +
 						'Got: ' + res[0]);
 					process.exit(0);
@@ -217,7 +221,7 @@ var callbackOmnibus = function(which) {
 
 				getTitle(callbackOmnibus);
 			}).catch(function(err) {
-				console.log("Couldn't find latest commit.", err);
+				logger('Could not find latest commit.', err);
 				process.exit(1);
 			});
 			break;
