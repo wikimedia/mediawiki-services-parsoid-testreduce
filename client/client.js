@@ -78,19 +78,25 @@ var runTest = function(cb, test, retryCount) {
 	})
 	.timeout(timeoutVal)
 	.catch(function(err) {
-		// SSS FIXME: We need to really check that
-		// error here is a promise timeout error.
+		// Log it to console
+		console.error(pidPrefix + 'Error in %s:%s: %s\n%s', test.prefix, test.title, err, err.stack || '');
+
+		// Can be one of many errors ...
+		// 1. Timeout because of a stuck test
+		//    (ex: phantomjs in visualdiffs)
+		// 2. Other transient retry-able error
+		//    (ex: failed uprightdiff, failed postprocessing in visualdiffs)
 		var maxRetries = config.opts.maxRetries || 1;
 		if (retryCount === undefined) {
 			retryCount = 0;
 		}
 		if (retryCount < maxRetries) {
+			console.error(pidPrefix + 'Retry # ' + retryCount);
 			runTest(cb, test, retryCount + 1);
 			return;
 		}
 
-		// Log it to console
-		console.error(pidPrefix + 'Error in %s:%s: %s\n%s', test.prefix, test.title, err, err.stack || '');
+		console.error(pidPrefix + 'No more retries!');
 
 		/*
 		 * If you're looking at the line below and thinking "Why in the
@@ -216,14 +222,14 @@ var callbackOmnibus = function(which) {
 	switch (args.shift()) {
 		case 'runTest':
 			test = args[0];
-			logger(pidPrefix + 'Running a test on ' + test.prefix + ':' + test.title + ' ....');
+			logger('Running a test on ' + test.prefix + ':' + test.title + ' ....');
 			args.unshift(callbackOmnibus);
 			runTest.apply(null, args);
 			break;
 
 		case 'postResult':
 			test = args[2];
-			logger(pidPrefix + 'Posting a result for ' + test.prefix + ':' + test.title + ' ....');
+			logger('Posting a result for ' + test.prefix + ':' + test.title + ' ....');
 			args.push(callbackOmnibus);
 			postResult.apply(null, args);
 			break;
