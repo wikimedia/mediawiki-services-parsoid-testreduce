@@ -68,14 +68,18 @@ var getTitle = function(cb) {
 };
 
 var runTest = function(cb, test, retryCount) {
-	// Abort test if no result is returned in this timeframe.
-	// Default: 5 minutes.
+	if (!config.opts.testTimeout) {
+		// Default: 5 minutes.
+		config.outs.testTimeout = 5 * 60 * 1000;
+	}
 	// Add a random (max 500ms) shift in case multiple testreduce
 	// clients fails and they don't all retry in lockstep fashion.
-	var timeoutVal = Math.round(Math.random()*500) + (config.opts.testTimeout || 5*60*1000);
+	var timeoutVal = Math.round(Math.random()*500) + config.opts.testTimeout;
+
 	config.runTest(config.opts, test).then(function(results) {
 		cb('postResult', null, results, test, null);
 	})
+	// Abort test if no result is returned within a fixed timeframe
 	.timeout(timeoutVal)
 	.catch(function(err) {
 		// Log it to console
@@ -92,7 +96,14 @@ var runTest = function(cb, test, retryCount) {
 		}
 		if (retryCount < maxRetries) {
 			console.error(pidPrefix + 'Retry # ' + retryCount);
-			runTest(cb, test, retryCount + 1);
+			var origCb = cb;
+			// Replace cb to prevent a delayed response from
+			// overwriting results from a later retry.
+			// FIXME: Redo this side-effecty crap.
+			cb = function() {
+				logger('Rejecting delayed result for: ' + test.prefix + ':' + test.title);
+			};
+			runTest(origCb, test, retryCount + 1);
 			return;
 		}
 
