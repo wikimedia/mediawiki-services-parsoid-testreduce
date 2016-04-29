@@ -70,7 +70,7 @@ var getTitle = function(cb) {
 var runTest = function(cb, test, retryCount) {
 	if (!config.opts.testTimeout) {
 		// Default: 5 minutes.
-		config.outs.testTimeout = 5 * 60 * 1000;
+		config.opts.testTimeout = 5 * 60 * 1000;
 	}
 	// Add a random (max 500ms) shift in case multiple testreduce
 	// clients fails and they don't all retry in lockstep fashion.
