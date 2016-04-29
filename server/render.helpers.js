@@ -53,7 +53,7 @@ RenderHelpers.oldCommitLinkData = function(urlPrefix, oldCommit, newCommit, titl
 	};
 };
 
-RenderHelpers.regressionsHeaderData = ['Title', 'Old Commit', 'Errors|Fails|Skips', 'New Commit', 'Errors|Fails|Skips'];
+RenderHelpers.regressionsHeaderData = ['Title', 'Old Commit', 'Errors|Semantic|Syntactic', 'New Commit', 'Errors|Semantic|Syntactic'];
 
 RenderHelpers.makeRegressionRow = function(urlPrefix, row) {
 	return [

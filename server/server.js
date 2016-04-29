@@ -230,13 +230,13 @@ var dbStatsQuery =
 	'(select count(*) from stats where stats.commit_hash = ' +
 		'(select hash from commits order by timestamp desc limit 1)) as maxresults, ' +
 	'(select avg(stats.errors) from stats join pages on ' +
-		'pages.latest_stat = stats.id) as avgerrors, ' +
+		'pages.latest_stat = stats.id) as avgErrorScore, ' +
 	'(select avg(stats.fails) from stats join pages on ' +
-		'pages.latest_stat = stats.id) as avgfails, ' +
+		'pages.latest_stat = stats.id) as avgSemanticDiffs, ' +
 	'(select avg(stats.skips) from stats join pages on ' +
-		'pages.latest_stat = stats.id) as avgskips, ' +
+		'pages.latest_stat = stats.id) as avgSyntacticDiffs, ' +
 	'(select avg(stats.score) from stats join pages on ' +
-		'pages.latest_stat = stats.id) as avgscore, ' +
+		'pages.latest_stat = stats.id) as avgScore, ' +
 	'count(*) AS total, ' +
 	'count(CASE WHEN stats.errors=0 THEN 1 ELSE NULL END) AS no_errors, ' +
 	'count(CASE WHEN stats.errors=0 AND stats.fails=0 ' +
@@ -285,13 +285,13 @@ var dbPerWikiStatsQuery =
 		'(select hash from commits order by timestamp desc limit 1) ' +
 		'and pages.prefix = ?) as maxresults, ' +
 	'(select avg(stats.errors) from stats join pages on ' +
-		'pages.latest_stat = stats.id where pages.prefix = ?) as avgerrors, ' +
+		'pages.latest_stat = stats.id where pages.prefix = ?) as avgErrorScore, ' +
 	'(select avg(stats.fails) from stats join pages on ' +
-		'pages.latest_stat = stats.id where pages.prefix = ?) as avgfails, ' +
+		'pages.latest_stat = stats.id where pages.prefix = ?) as avgSemanticDiffs, ' +
 	'(select avg(stats.skips) from stats join pages on ' +
-		'pages.latest_stat = stats.id where pages.prefix = ?) as avgskips, ' +
+		'pages.latest_stat = stats.id where pages.prefix = ?) as avgSyntacticDiffs, ' +
 	'(select avg(stats.score) from stats join pages on ' +
-		'pages.latest_stat = stats.id where pages.prefix = ?) as avgscore, ' +
+		'pages.latest_stat = stats.id where pages.prefix = ?) as avgScore, ' +
 	'count(*) AS total, ' +
 	'count(CASE WHEN stats.errors=0 THEN 1 ELSE NULL END) AS no_errors, ' +
 	'count(CASE WHEN stats.errors=0 AND stats.fails=0 ' +
@@ -720,8 +720,8 @@ var receiveResults = function(req, res) {
 var pageListData = [
 	{ url: 'topfails', title: 'Results by title' },
 	{ url: 'failedFetches', title: 'Non-existing test pages' },
-	{ url: 'failsDistr', title: 'Histogram of failures' },
-	{ url: 'skipsDistr', title: 'Histogram of skips' },
+	{ url: 'semanticDiffsDistr', title: 'Histogram of semantic diffs' },
+	{ url: 'syntacticDiffsDistr', title: 'Histogram of syntactic diffs' },
 	{ url: 'commits', title: 'List of all tested commits' },
 ];
 
@@ -811,10 +811,10 @@ var statsWebInterface = function(req, res) {
 				},
 			],
 			averages: [
-				{ description: 'Errors', value: row[0].avgerrors },
-				{ description: 'Fails', value: row[0].avgfails },
-				{ description: 'Skips', value: row[0].avgskips },
-				{ description: 'Score', value: row[0].avgscore },
+				{ description: 'Errors', value: row[0].avgErrorScore },
+				{ description: 'Semantic Diffs', value: row[0].avgSemanticDiffs },
+				{ description: 'Syntactic Diffs', value: row[0].avgSyntacticDiffs },
+				{ description: 'Score', value: row[0].avgScore },
 			],
 			pages: pageListData,
 		};
@@ -1244,10 +1244,10 @@ var startWebServer = Promise.method(function() {
 	app.get(/^\/resultFlagOld\/([a-f0-9]*)\/([a-f0-9]*)\/([^\/]+)\/(.*)$/, resultFlagOldWebInterface);
 
 	// Distribution of fails
-	app.get(/^\/failsDistr$/, getFailsDistr);
+	app.get(/^\/semanticDiffsDistr$/, getFailsDistr);
 
 	// Distribution of fails
-	app.get(/^\/skipsDistr$/, getSkipsDistr);
+	app.get(/^\/syntacticDiffsDistr$/, getSkipsDistr);
 
 	// List of all commits
 	app.get('/commits', getCommits);
