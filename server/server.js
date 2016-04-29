@@ -1238,10 +1238,10 @@ var startWebServer = Promise.method(function() {
 	app.get(/^\/topfixes\/between\/([^\/]+)\/([^\/]+)(?:\/(\d+))?$/, getTopfixes);
 
 	// Results for a title on a commit, flag skips/fails new since older commit
-	app.get(/^\/resultFlagNew\/([a-f0-9]*)\/([a-f0-9]*)\/([^\/]+)\/(.*)$/, resultFlagNewWebInterface);
+	app.get(/^\/resultFlagNew\/([\w\-_]*)\/([\w\-_]*)\/([^\/]+)\/(.*)$/, resultFlagNewWebInterface);
 
 	// Results for a title on a commit, flag skips/fails no longer in newer commit
-	app.get(/^\/resultFlagOld\/([a-f0-9]*)\/([a-f0-9]*)\/([^\/]+)\/(.*)$/, resultFlagOldWebInterface);
+	app.get(/^\/resultFlagOld\/([\w\-_]*)\/([\w\-_]*)\/([^\/]+)\/(.*)$/, resultFlagOldWebInterface);
 
 	// Distribution of fails
 	app.get(/^\/semanticDiffsDistr$/, getFailsDistr);
