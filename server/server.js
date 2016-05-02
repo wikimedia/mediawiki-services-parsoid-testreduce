@@ -229,14 +229,6 @@ var dbStatsQuery =
 	'(select hash from commits order by timestamp desc limit 1 offset 1) as secondhash, ' +
 	'(select count(*) from stats where stats.commit_hash = ' +
 		'(select hash from commits order by timestamp desc limit 1)) as maxresults, ' +
-	'(select avg(stats.errors) from stats join pages on ' +
-		'pages.latest_stat = stats.id) as avgErrorScore, ' +
-	'(select avg(stats.fails) from stats join pages on ' +
-		'pages.latest_stat = stats.id) as avgSemanticDiffs, ' +
-	'(select avg(stats.skips) from stats join pages on ' +
-		'pages.latest_stat = stats.id) as avgSyntacticDiffs, ' +
-	'(select avg(stats.score) from stats join pages on ' +
-		'pages.latest_stat = stats.id) as avgScore, ' +
 	'count(*) AS total, ' +
 	'count(CASE WHEN stats.errors=0 THEN 1 ELSE NULL END) AS no_errors, ' +
 	'count(CASE WHEN stats.errors=0 AND stats.fails=0 ' +
@@ -284,14 +276,6 @@ var dbPerWikiStatsQuery =
 		'where stats.commit_hash = ' +
 		'(select hash from commits order by timestamp desc limit 1) ' +
 		'and pages.prefix = ?) as maxresults, ' +
-	'(select avg(stats.errors) from stats join pages on ' +
-		'pages.latest_stat = stats.id where pages.prefix = ?) as avgErrorScore, ' +
-	'(select avg(stats.fails) from stats join pages on ' +
-		'pages.latest_stat = stats.id where pages.prefix = ?) as avgSemanticDiffs, ' +
-	'(select avg(stats.skips) from stats join pages on ' +
-		'pages.latest_stat = stats.id where pages.prefix = ?) as avgSyntacticDiffs, ' +
-	'(select avg(stats.score) from stats join pages on ' +
-		'pages.latest_stat = stats.id where pages.prefix = ?) as avgScore, ' +
 	'count(*) AS total, ' +
 	'count(CASE WHEN stats.errors=0 THEN 1 ELSE NULL END) AS no_errors, ' +
 	'count(CASE WHEN stats.errors=0 AND stats.fails=0 ' +
@@ -809,12 +793,6 @@ var statsWebInterface = function(req, res) {
 					value: numRegressions,
 					url: 'regressions/between/' + row[0].secondhash + '/' + row[0].maxhash,
 				},
-			],
-			averages: [
-				{ description: 'Errors', value: row[0].avgErrorScore },
-				{ description: 'Semantic Diffs', value: row[0].avgSemanticDiffs },
-				{ description: 'Syntactic Diffs', value: row[0].avgSyntacticDiffs },
-				{ description: 'Score', value: row[0].avgScore },
 			],
 			pages: pageListData,
 		};
