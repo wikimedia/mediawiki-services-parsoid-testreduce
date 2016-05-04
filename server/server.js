@@ -855,13 +855,13 @@ var resultsWebInterface = function(req, res) {
 			res.status(500).send(err.toString());
 		} else {
 			res.setHeader('Content-Type', 'text/xml; charset=UTF-8');
-			res.status(200);
-			res.write('<?xml-stylesheet href="/static/result.css"?>\n');
-			res.write('<testsuite>');
+			var body = '<?xml-stylesheet href="/static/result.css"?>\n';
+			body += '<testsuite>';
 			for (var i = 0; i < rows.length; i++) {
-				res.write(rows[i].result);
-				res.end('</testsuite>');
+				body += rows[i].result;
+				body += '</testsuite>';
 			}
+			res.status(200).send(body);
 		}
 	});
 };
