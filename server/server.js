@@ -814,9 +814,9 @@ var makeFailsRow = function(urlPrefix, row) {
 	return [
 		RH.pageTitleData(urlPrefix, row),
 		RH.commitLinkData(urlPrefix, row.hash, row.title, row.prefix),
-		row.skips,
-		row.fails,
 		row.errors === null ? 0 : row.errors,
+		row.fails,
+		row.skips,
 	];
 };
 
@@ -831,7 +831,7 @@ var failsWebInterface = function(req, res) {
 		urlPrefix: relativeUrlPrefix + 'topfails',
 		urlSuffix: '',
 		heading: 'Results by title',
-		header: ['Title', 'Commit', 'Syntactic diffs', 'Semantic diffs', 'Errors'],
+		header: ['Title', 'Commit', 'Errors', 'Semantic diffs', 'Syntactic diffs'],
 	};
 	db.query(dbFailsQuery, [ offset ],
 		RH.displayPageList.bind(null, res, data, makeFailsRow));
@@ -1267,7 +1267,7 @@ var startWebServer = Promise.method(function() {
 			},
 
 			formatHash: function(hash) {
-				return hash.slice(0, 10);
+				return hash;
 			},
 
 			formatDate: function(timestamp) {
