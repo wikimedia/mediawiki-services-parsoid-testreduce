@@ -99,7 +99,10 @@ fetchAll = function(fetchArgs, out) {
 	request(requestOpts, processRes.bind(null, fetchArgs, out));
 };
 
-var FRACTION = 100*1/3;
+// SSS: +2 is so we fetch a few extra titles
+// to account for the title overlap between the list of
+// randomly generate titles and recently edited titles
+var FRACTION = 100*1/3+2;
 wikis.forEach(function(obj) {
 	var prefix = obj.prefix;
 	var count = Math.round(obj.limit * FRACTION);

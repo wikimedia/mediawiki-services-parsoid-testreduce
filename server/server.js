@@ -229,14 +229,6 @@ var dbStatsQuery =
 	'(select hash from commits order by timestamp desc limit 1 offset 1) as secondhash, ' +
 	'(select count(*) from stats where stats.commit_hash = ' +
 		'(select hash from commits order by timestamp desc limit 1)) as maxresults, ' +
-	'(select avg(stats.errors) from stats join pages on ' +
-		'pages.latest_stat = stats.id) as avgerrors, ' +
-	'(select avg(stats.fails) from stats join pages on ' +
-		'pages.latest_stat = stats.id) as avgfails, ' +
-	'(select avg(stats.skips) from stats join pages on ' +
-		'pages.latest_stat = stats.id) as avgskips, ' +
-	'(select avg(stats.score) from stats join pages on ' +
-		'pages.latest_stat = stats.id) as avgscore, ' +
 	'count(*) AS total, ' +
 	'count(CASE WHEN stats.errors=0 THEN 1 ELSE NULL END) AS no_errors, ' +
 	'count(CASE WHEN stats.errors=0 AND stats.fails=0 ' +
@@ -284,14 +276,6 @@ var dbPerWikiStatsQuery =
 		'where stats.commit_hash = ' +
 		'(select hash from commits order by timestamp desc limit 1) ' +
 		'and pages.prefix = ?) as maxresults, ' +
-	'(select avg(stats.errors) from stats join pages on ' +
-		'pages.latest_stat = stats.id where pages.prefix = ?) as avgerrors, ' +
-	'(select avg(stats.fails) from stats join pages on ' +
-		'pages.latest_stat = stats.id where pages.prefix = ?) as avgfails, ' +
-	'(select avg(stats.skips) from stats join pages on ' +
-		'pages.latest_stat = stats.id where pages.prefix = ?) as avgskips, ' +
-	'(select avg(stats.score) from stats join pages on ' +
-		'pages.latest_stat = stats.id where pages.prefix = ?) as avgscore, ' +
 	'count(*) AS total, ' +
 	'count(CASE WHEN stats.errors=0 THEN 1 ELSE NULL END) AS no_errors, ' +
 	'count(CASE WHEN stats.errors=0 AND stats.fails=0 ' +
@@ -628,7 +612,7 @@ var receiveResults = function(req, res) {
 		skipCount = skipCount ? skipCount.length : 0;
 		failCount = result.match(/<failure/g);
 		failCount = failCount ? failCount.length : 0;
-		dneError = result.match('DoesNotExist');
+		dneError = result.match(/Error: Got status code: 404/g);
 		resultString = result;
 	}
 
@@ -720,8 +704,8 @@ var receiveResults = function(req, res) {
 var pageListData = [
 	{ url: 'topfails', title: 'Results by title' },
 	{ url: 'failedFetches', title: 'Non-existing test pages' },
-	{ url: 'failsDistr', title: 'Histogram of failures' },
-	{ url: 'skipsDistr', title: 'Histogram of skips' },
+	{ url: 'semanticDiffsDistr', title: 'Histogram of semantic diffs' },
+	{ url: 'syntacticDiffsDistr', title: 'Histogram of syntactic diffs' },
 	{ url: 'commits', title: 'List of all tested commits' },
 ];
 
@@ -810,12 +794,6 @@ var statsWebInterface = function(req, res) {
 					url: 'regressions/between/' + row[0].secondhash + '/' + row[0].maxhash,
 				},
 			],
-			averages: [
-				{ description: 'Errors', value: row[0].avgerrors },
-				{ description: 'Fails', value: row[0].avgfails },
-				{ description: 'Skips', value: row[0].avgskips },
-				{ description: 'Score', value: row[0].avgscore },
-			],
 			pages: pageListData,
 		};
 
@@ -836,9 +814,9 @@ var makeFailsRow = function(urlPrefix, row) {
 	return [
 		RH.pageTitleData(urlPrefix, row),
 		RH.commitLinkData(urlPrefix, row.hash, row.title, row.prefix),
-		row.skips,
-		row.fails,
 		row.errors === null ? 0 : row.errors,
+		row.fails,
+		row.skips,
 	];
 };
 
@@ -853,7 +831,7 @@ var failsWebInterface = function(req, res) {
 		urlPrefix: relativeUrlPrefix + 'topfails',
 		urlSuffix: '',
 		heading: 'Results by title',
-		header: ['Title', 'Commit', 'Syntactic diffs', 'Semantic diffs', 'Errors'],
+		header: ['Title', 'Commit', 'Errors', 'Semantic diffs', 'Syntactic diffs'],
 	};
 	db.query(dbFailsQuery, [ offset ],
 		RH.displayPageList.bind(null, res, data, makeFailsRow));
@@ -877,13 +855,13 @@ var resultsWebInterface = function(req, res) {
 			res.status(500).send(err.toString());
 		} else {
 			res.setHeader('Content-Type', 'text/xml; charset=UTF-8');
-			res.status(200);
-			res.write('<?xml-stylesheet href="/static/result.css"?>\n');
-			res.write('<testsuite>');
+			var body = '<?xml-stylesheet href="/static/result.css"?>\n';
+			body += '<testsuite>';
 			for (var i = 0; i < rows.length; i++) {
-				res.write(rows[i].result);
-				res.end('</testsuite>');
+				body += rows[i].result;
+				body += '</testsuite>';
 			}
+			res.status(200).send(body);
 		}
 	});
 };
@@ -1238,16 +1216,16 @@ var startWebServer = Promise.method(function() {
 	app.get(/^\/topfixes\/between\/([^\/]+)\/([^\/]+)(?:\/(\d+))?$/, getTopfixes);
 
 	// Results for a title on a commit, flag skips/fails new since older commit
-	app.get(/^\/resultFlagNew\/([a-f0-9]*)\/([a-f0-9]*)\/([^\/]+)\/(.*)$/, resultFlagNewWebInterface);
+	app.get(/^\/resultFlagNew\/([\w\-_]*)\/([\w\-_]*)\/([^\/]+)\/(.*)$/, resultFlagNewWebInterface);
 
 	// Results for a title on a commit, flag skips/fails no longer in newer commit
-	app.get(/^\/resultFlagOld\/([a-f0-9]*)\/([a-f0-9]*)\/([^\/]+)\/(.*)$/, resultFlagOldWebInterface);
+	app.get(/^\/resultFlagOld\/([\w\-_]*)\/([\w\-_]*)\/([^\/]+)\/(.*)$/, resultFlagOldWebInterface);
 
 	// Distribution of fails
-	app.get(/^\/failsDistr$/, getFailsDistr);
+	app.get(/^\/semanticDiffsDistr$/, getFailsDistr);
 
 	// Distribution of fails
-	app.get(/^\/skipsDistr$/, getSkipsDistr);
+	app.get(/^\/syntacticDiffsDistr$/, getSkipsDistr);
 
 	// List of all commits
 	app.get('/commits', getCommits);
@@ -1289,7 +1267,7 @@ var startWebServer = Promise.method(function() {
 			},
 
 			formatHash: function(hash) {
-				return hash.slice(0, 10);
+				return hash;
 			},
 
 			formatDate: function(timestamp) {
