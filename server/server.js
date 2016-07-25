@@ -612,7 +612,7 @@ var receiveResults = function(req, res) {
 		skipCount = skipCount ? skipCount.length : 0;
 		failCount = result.match(/<failure/g);
 		failCount = failCount ? failCount.length : 0;
-		dneError = result.match('DoesNotExist');
+		dneError = result.match(/Error: Got status code: 404/g);
 		resultString = result;
 	}
 
