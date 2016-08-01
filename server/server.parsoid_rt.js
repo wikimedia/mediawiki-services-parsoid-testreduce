@@ -142,7 +142,7 @@ function setupEndpoints(settings, app, mysql, db, hbs) {
 					header: ['Title', 'Old Commit', 'New Commit'],
 				};
 				db.query(dbOneDiffRegressionsBetweenRevs, [r2, r1, numFails, numSkips, offset],
-					RH.displayPageList.bind(null, hbs, res, data, makeOneDiffRegressionRow));
+					RH.displayPageList.bind(null, res, data, makeOneDiffRegressionRow));
 			}
 		});
 	};
@@ -186,7 +186,7 @@ function setupEndpoints(settings, app, mysql, db, hbs) {
 			];
 		};
 		db.query(dbPagesWithRTSelserErrors, [commit, offset],
-			RH.displayPageList.bind(null, hbs, res, data, makeSelserErrorRow));
+			RH.displayPageList.bind(null, res, data, makeSelserErrorRow));
 	};
 
 	var getOneFailRegressions = displayOneDiffRegressions.bind(
@@ -232,7 +232,7 @@ function setupEndpoints(settings, app, mysql, db, hbs) {
 					header: RH.regressionsHeaderData,
 				};
 				db.query(dbNewFailsRegressionsBetweenRevs, [r2, r1, offset],
-					RH.displayPageList.bind(null, hbs, res, data, RH.makeRegressionRow));
+					RH.displayPageList.bind(null, res, data, RH.makeRegressionRow));
 			}
 		});
 	};
