@@ -12,16 +12,16 @@
    * generate random selection of titles 
    * merge the two sets (random selection, recently edited) of
      titles and generate a single unique title list.
-   * jsonify the list for use with the importJson.js script
+   * generate sql import scripts
 
-5. Upload/move the json files to the right server/directory.
+5. Upload/move the sql files to the right server/directory.
 
 6. On your target server, use mysqladmin/mysql or whatever to
    generate your new db.
 
 7. Init the db with the schema found in ../sql/create_everything.mysql
 
-8. Run the importAll.sh to populate your rt-testing db.
+8. Run the mysql import scripts to populate your rt-testing db.
 
 You are all done generating the new db.
 

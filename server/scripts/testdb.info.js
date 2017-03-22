@@ -9,25 +9,42 @@ module.exports = {
 	dump_percentage: 75,
 
 	wikis: [
-		// wikipedias
-		{ prefix: 'enwiki',  limit: 62 },
-		{ prefix: 'dewiki',  limit: 20 },
-		{ prefix: 'nlwiki',  limit: 20 },
+		// 1M+ wikipedias (ordered by depth)
+		{ prefix: 'enwiki',  limit: 60 },
 		{ prefix: 'frwiki',  limit: 20 },
-		{ prefix: 'itwiki',  limit: 20 },
-		{ prefix: 'ruwiki',  limit: 20 },
 		{ prefix: 'eswiki',  limit: 20 },
-		{ prefix: 'ptwiki',  limit: 13 },
-		{ prefix: 'plwiki',  limit: 12 },
-		{ prefix: 'hewiki',  limit: 8 },
-		{ prefix: 'zhwiki',  limit: 5 },
-		{ prefix: 'hiwiki',  limit: 4 },
+		{ prefix: 'ruwiki',  limit: 20 },
+		{ prefix: 'itwiki',  limit: 15 },
+		{ prefix: 'dewiki',  limit: 15 },
+		{ prefix: 'jawiki',  limit: 10 },
+		{ prefix: 'viwiki',  limit: 10 },
+		{ prefix: 'plwiki',  limit: 10 },
+		{ prefix: 'nlwiki',  limit: 10 },
+		{ prefix: 'svwiki',  limit: 8 },
+		{ prefix: 'warwiki', limit: 8 },
+		{ prefix: 'cebwiki', limit: 8 },
+
+		// 100K+ wikipedias (ordered by edits)
+		{ prefix: 'ptwiki',  limit: 6 },
+		{ prefix: 'zhwiki',  limit: 6 },
+		{ prefix: 'shwiki',  limit: 6 },
+		{ prefix: 'arwiki',  limit: 4 },
+		{ prefix: 'hewiki',  limit: 4 },
+		{ prefix: 'kowiki',  limit: 3 },
+		{ prefix: 'ukwiki',  limit: 3 },
+		{ prefix: 'trwiki',  limit: 2 },
+		{ prefix: 'huwiki',  limit: 2 },
+		{ prefix: 'cawiki',  limit: 2 },
+		{ prefix: 'nowiki',  limit: 2 },
+
+		// Other language wikipedias
+		{ prefix: 'zh-yuewiki',  limit: 2 },
+		{ prefix: 'thwiki',  limit: 2 },
+		{ prefix: 'hiwiki',  limit: 2 },
+		{ prefix: 'bnwiki',  limit: 2 },
+		{ prefix: 'mlwiki',  limit: 2 },
 
 		// link prefix languages
-		{ prefix: 'svwiki',  limit: 4 },
-		{ prefix: 'jawiki',  limit: 4 },
-		{ prefix: 'arwiki',  limit: 4 },
-		{ prefix: 'kowiki',  limit: 4 },
 		{ prefix: 'ckbwiki', limit: 1 },
 		{ prefix: 'cuwiki',  limit: 1 },
 		{ prefix: 'cvwiki',  limit: 1 },
@@ -39,7 +56,6 @@ module.exports = {
 		{ prefix: 'lnwiki',  limit: 1 },
 		{ prefix: 'mznwiki', limit: 1 },
 		{ prefix: 'pnbwiki', limit: 1 },
-		{ prefix: 'ukwiki',  limit: 1 },
 		{ prefix: 'uzwiki',  limit: 1 },
 
 		// wiktionary
