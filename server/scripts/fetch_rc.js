@@ -3,50 +3,8 @@
 require('../../core-upgrade.js');
 var fs = require('fs');
 var request = require('request');
-
-var wikis = [
-	{ prefix: 'enwiki', limit: 150 },
-	{ prefix: 'dewiki', limit: 50 },
-	{ prefix: 'nlwiki', limit: 50 },
-	{ prefix: 'frwiki', limit: 50 },
-	{ prefix: 'itwiki', limit: 50 },
-	{ prefix: 'ruwiki', limit: 50 },
-	{ prefix: 'eswiki', limit: 50 },
-	{ prefix: 'ptwiki', limit: 30 },
-	{ prefix: 'plwiki', limit: 30 },
-	{ prefix: 'hewiki', limit: 20 },
-	{ prefix: 'svwiki', limit: 10 },
-	{ prefix: 'jawiki', limit: 10 },
-	{ prefix: 'arwiki', limit: 10 },
-	{ prefix: 'hiwiki', limit: 10 },
-	{ prefix: 'kowiki', limit: 10 },
-	{ prefix: 'zhwiki', limit: 10 },
-	{ prefix: 'ckbwiki', limit: 2 },
-	{ prefix: 'cuwiki', limit: 2 },
-	{ prefix: 'cvwiki', limit: 2 },
-	{ prefix: 'hywiki', limit: 2 },
-	{ prefix: 'iswiki', limit: 2 },
-	{ prefix: 'kaawiki', limit: 2 },
-	{ prefix: 'kawiki', limit: 2 },
-	{ prefix: 'lbewiki', limit: 2 },
-	{ prefix: 'lnwiki', limit: 2 },
-	{ prefix: 'mznwiki', limit: 2 },
-	{ prefix: 'pnbwiki', limit: 2 },
-	{ prefix: 'ukwiki', limit: 2 },
-	{ prefix: 'uzwiki', limit: 2 },
-	{ prefix: 'enwiktionary', limit: 2 },
-	{ prefix: 'frwiktionary', limit: 2 },
-	{ prefix: 'itwiktionary', limit: 2 },
-	{ prefix: 'eswiktionary', limit: 2 },
-	{ prefix: 'enwikisource', limit: 2 },
-	{ prefix: 'frwikisource', limit: 2 },
-	{ prefix: 'itwikisource', limit: 2 },
-	{ prefix: 'eswikisource', limit: 2 },
-	{ prefix: 'enwikivoyage', limit: 2 },
-	{ prefix: 'frwikivoyage', limit: 2 },
-	{ prefix: 'itwikivoyage', limit: 2 },
-	{ prefix: 'eswikivoyage', limit: 2 },
-];
+var testdb = require('./testdb.info.js');
+var wikis = testdb.wikis;
 
 var processRes, fetchAll;
 
@@ -99,13 +57,14 @@ fetchAll = function(fetchArgs, out) {
 	request(requestOpts, processRes.bind(null, fetchArgs, out));
 };
 
-// SSS: +2 is so we fetch a few extra titles
+// SSS: +0.02 is so we fetch a few extra titles
 // to account for the title overlap between the list of
 // randomly generate titles and recently edited titles
-var FRACTION = 100*1/3+2;
+var sum = wikis.reduce(function(s, w) { return s + w.limit; }, 0);
+var rcSize = ((1 - testdb.dump_percentage/100) + 0.02) * testdb.size;
 wikis.forEach(function(obj) {
 	var prefix = obj.prefix;
-	var count = Math.round(obj.limit * FRACTION);
+	var count = Math.round(obj.limit/sum * rcSize);
 	var domain = prefix.replace(/wiki$/, '.wikipedia.org').
 		replace(/wiktionary/, '.wiktionary.org').
 		replace(/wikisource/, '.wikisource.org').
@@ -121,7 +80,7 @@ wikis.forEach(function(obj) {
 		'continue': '',
 	};
 
-	console.log('Processing: ' + prefix);
+	console.log('Processing: ' + prefix + "; fetching: " + count + " items!");
 	var fetchArgs = {
 		prefix: prefix,
 		count: count,
