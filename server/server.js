@@ -730,7 +730,7 @@ var statsWebInterface = function(req, res) {
 		var latestHash = row[0].hash;
 		db.query(dbPreviousHash, [], function(err, row) {
 			if (err) return handleErr(err, res);
-			var previousHash = row[0].hash;
+			var previousHash = row.length > 0 ? row[0].hash : 'null';
 
 			// Switch the query object based on the prefix
 			if (prefix !== null) {
