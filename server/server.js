@@ -223,12 +223,12 @@ var dbUpdateCrashersClearTries =
 	'SET claim_num_tries = 0 ' +
 	'WHERE claim_hash != ? AND claim_num_tries >= ?';
 
+var dbLatestHash = 'SELECT hash FROM commits ORDER BY timestamp DESC LIMIT 1';
+var dbPreviousHash = 'SELECT hash FROM commits ORDER BY timestamp DESC LIMIT 1 OFFSET 1';
+
 var dbStatsQuery =
-	'SELECT ' +
-	'(select hash from commits order by timestamp desc limit 1) as maxhash, ' +
-	'(select hash from commits order by timestamp desc limit 1 offset 1) as secondhash, ' +
-	'(select count(*) from stats where stats.commit_hash = ' +
-		'(select hash from commits order by timestamp desc limit 1)) as maxresults, ' +
+	'SELECT ? AS maxhash, ? AS secondhash, ' +
+	'(SELECT count(*) FROM stats WHERE stats.commit_hash = ?) AS maxresults, ' +
 	'count(*) AS total, ' +
 	'count(CASE WHEN stats.errors=0 THEN 1 ELSE NULL END) AS no_errors, ' +
 	'count(CASE WHEN stats.errors=0 AND stats.fails=0 ' +
@@ -240,30 +240,28 @@ var dbStatsQuery =
 	'FROM pages p ' +
 	'JOIN stats AS s1 ON s1.page_id = p.id ' +
 	'JOIN stats AS s2 ON s2.page_id = p.id ' +
-	'WHERE s1.commit_hash = (SELECT hash ' +
-		'FROM commits ORDER BY timestamp DESC LIMIT 1 ) ' +
-	'AND s2.commit_hash = (SELECT hash ' +
-		'FROM commits ORDER BY timestamp DESC LIMIT 1 OFFSET 1) ' +
+	'WHERE s1.commit_hash = ? ' +
+	'AND s2.commit_hash = ? ' +
 	'AND s1.score > s2.score ) as numregressions, ' +
 	// get fix count between last two commits
 	'(SELECT count(*) ' +
 		'FROM pages ' +
 		'JOIN stats AS s1 ON s1.page_id = pages.id ' +
 		'JOIN stats AS s2 ON s2.page_id = pages.id ' +
-		'WHERE s1.commit_hash = (SELECT hash FROM commits ORDER BY timestamp DESC LIMIT 1 ) ' +
-	'AND s2.commit_hash = (SELECT hash FROM commits ORDER BY timestamp DESC LIMIT 1 OFFSET 1 ) ' +
-	'AND s1.score < s2.score ) as numfixes, '  +
+		'WHERE s1.commit_hash = ? ' +
+		'AND s2.commit_hash = ? ' +
+		'AND s1.score < s2.score ) AS numfixes, '  +
 	// Get latest commit crashers
 	'(SELECT count(*) ' +
 		'FROM pages ' +
-		'WHERE claim_hash = (SELECT hash FROM commits ORDER BY timestamp DESC LIMIT 1) ' +
+		'WHERE claim_hash = ? ' +
 			'AND claim_num_tries >= ? ' +
 			'AND claim_timestamp < ?) AS crashers, ' +
 	// Get num of rt selser errors
 	'(SELECT count(*) ' +
 		'FROM pages ' +
 		'JOIN stats ON pages.id = stats.page_id ' +
-		'WHERE stats.commit_hash = (SELECT hash FROM commits ORDER BY timestamp DESC LIMIT 1) ' +
+		'WHERE stats.commit_hash = ? ' +
 			'AND stats.selser_errors > 0) AS rtselsererrors ' +
 
 	'FROM pages JOIN stats on pages.latest_stat = stats.id';
@@ -722,91 +720,109 @@ var statsWebInterface = function(req, res) {
 	var cutoffDate = new Date(Date.now() - (cutOffTime * 1000));
 	var prefix = req.params[1] || null;
 
-	// Switch the query object based on the prefix
-	if (prefix !== null) {
-		query = dbPerWikiStatsQuery;
-		queryParams = [
-			prefix, prefix, prefix, prefix,
-			prefix, prefix, prefix, prefix,
-			maxTries, cutoffDate, prefix, prefix,
-		];
-	} else {
-		query = dbStatsQuery;
-		queryParams = [ maxTries, cutoffDate ];
-	}
+	var handleErr = function(err, res) {
+		res.status(500).send(err.toString());
+	};
 
-	// Fetch stats for commit
-	db.query(query, queryParams, function(err, row) {
-		if (err) {
-			res.status(500).send(err.toString());
-			return;
-		}
+	db.query(dbLatestHash, [], function(err, row) {
+		if (err) return handleErr(err, res);
 
-		res.status(200);
+		var latestHash = row[0].hash;
+		db.query(dbPreviousHash, [], function(err, row) {
+			if (err) return handleErr(err, res);
+			var previousHash = row[0].hash;
 
-		var tests = row[0].total;
-		var errorLess = row[0].no_errors;
-		var skipLess = row[0].no_skips;
-		var numRegressions = row[0].numregressions;
-		var numFixes = row[0].numfixes;
-		var noErrors = Math.round(100 * 100 * errorLess / (tests || 1)) / 100;
-		var perfects = Math.round(100 * 100 * skipLess / (tests || 1)) / 100;
-		var syntacticDiffs = Math.round(100 * 100 *
-			(row[0].no_fails / (tests || 1))) / 100;
+			// Switch the query object based on the prefix
+			if (prefix !== null) {
+				query = dbPerWikiStatsQuery;
+				queryParams = [
+					prefix, prefix, prefix, prefix,
+					prefix, prefix, prefix, prefix,
+					maxTries, cutoffDate, prefix, prefix,
+				];
+			} else {
+				query = dbStatsQuery;
+				queryParams = [
+					latestHash, previousHash,
+					latestHash,
+					latestHash, previousHash,
+					latestHash, previousHash,
+					latestHash, maxTries, cutoffDate,
+					latestHash
+				];
+			}
 
-		var width = 800;
+			// Fetch stats for commit
+			db.query(query, queryParams, function(err, row) {
+				if (err) return handleErr(err, res);
 
-		var data = {
-			prefix: prefix,
-			results: {
-				tests: tests,
-				noErrors: noErrors,
-				syntacticDiffs: syntacticDiffs,
-				perfects: perfects,
-			},
-			graphWidths: {
-				perfect: width * perfects / 100 || 0,
-				syntacticDiff: width * (syntacticDiffs - perfects) / 100 || 0,
-				semanticDiff: width * (100 - syntacticDiffs) / 100 || 0,
-			},
-			latestRevision: [
-				{
-					description: 'Git SHA1',
-					value: row[0].maxhash,
-				},
-				{
-					description: 'Test Results',
-					value: row[0].maxresults,
-				},
-				{
-					description: 'Crashers',
-					value: row[0].crashers,
-					url: 'crashers',
-				},
-				{
-					description: 'Fixes',
-					value: numFixes,
-					url: 'topfixes/between/' + row[0].secondhash + '/' + row[0].maxhash,
-				},
-				{
-					description: 'Regressions',
-					value: numRegressions,
-					url: 'regressions/between/' + row[0].secondhash + '/' + row[0].maxhash,
-				},
-			],
-			pages: pageListData,
-		};
+				res.status(200);
 
-		if (perfConfig) {
-			perfConfig.updateIndexData(data, row);
-		}
+				var tests = row[0].total;
+				var errorLess = row[0].no_errors;
+				var skipLess = row[0].no_skips;
+				var numRegressions = row[0].numregressions;
+				var numFixes = row[0].numfixes;
+				var noErrors = Math.round(100 * 100 * errorLess / (tests || 1)) / 100;
+				var perfects = Math.round(100 * 100 * skipLess / (tests || 1)) / 100;
+				var syntacticDiffs = Math.round(100 * 100 *
+					(row[0].no_fails / (tests || 1))) / 100;
 
-		if (parsoidRTConfig) {
-			parsoidRTConfig.updateIndexData(data, row);
-			data.parsoidRT = true;
-		}
+				var width = 800;
 
-		res.render('index.html', data);
+				var data = {
+					prefix: prefix,
+					results: {
+						tests: tests,
+						noErrors: noErrors,
+						syntacticDiffs: syntacticDiffs,
+						perfects: perfects,
+					},
+					graphWidths: {
+						perfect: width * perfects / 100 || 0,
+						syntacticDiff: width * (syntacticDiffs - perfects) / 100 || 0,
+						semanticDiff: width * (100 - syntacticDiffs) / 100 || 0,
+					},
+					latestRevision: [
+						{
+							description: 'Git SHA1',
+							value: row[0].maxhash,
+						},
+						{
+							description: 'Test Results',
+							value: row[0].maxresults,
+						},
+						{
+							description: 'Crashers',
+							value: row[0].crashers,
+							url: 'crashers',
+						},
+						{
+							description: 'Fixes',
+							value: numFixes,
+							url: 'topfixes/between/' + row[0].secondhash + '/' + row[0].maxhash,
+						},
+						{
+							description: 'Regressions',
+							value: numRegressions,
+							url: 'regressions/between/' + row[0].secondhash + '/' + row[0].maxhash,
+						},
+					],
+					pages: pageListData,
+				};
+
+				if (perfConfig) {
+					perfConfig.updateIndexData(data, row);
+				}
+
+				if (parsoidRTConfig) {
+					parsoidRTConfig.updateIndexData(data, row);
+					data.parsoidRT = true;
+				}
+
+				res.render('index.html', data);
+			});
+		});
 	});
 };
 
