@@ -167,15 +167,16 @@ db.connect(function(err) {
 
 // ----------------- The queries --------------
 var dbGetTitle =
-	'SELECT id, title, prefix, claim_hash, claim_num_tries ' +
-	'FROM pages ' +
-	'WHERE num_fetch_errors < ? AND ' +
-	'( claim_hash != ? OR ' +
-		'( claim_num_tries < ? AND claim_timestamp < ? ) ) ' +
-	'ORDER BY claim_num_tries DESC, latest_score DESC, ' +
-	'claim_timestamp ASC LIMIT ? ' +
+	'SELECT * FROM (' +
+	'  SELECT id, title, prefix, claim_hash, claim_num_tries ' +
+	'  FROM pages ' +
+	'  WHERE num_fetch_errors < ? AND ' +
+	'  ( claim_hash != ? OR ( claim_num_tries < ? AND claim_timestamp < ? ) )' +
+	'  ORDER BY claim_num_tries DESC, latest_score DESC, ' +
+	'  claim_timestamp ASC LIMIT 500 ' +
 	// Stop other transactions from reading until we finish this one.
-	'FOR UPDATE';
+	'  FOR UPDATE' +
+	') AS titles ORDER BY RAND() LIMIT ?';
 
 var dbIncrementFetchErrorCount =
 	'UPDATE pages SET ' +
