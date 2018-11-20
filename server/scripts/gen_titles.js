@@ -18,9 +18,9 @@ function generate_titles() {
 		var total = Math.round(n * 100 / testdb.dump_percentage);
 		var file = wiki + ".random_titles.txt";
 		var commands = [
-			"zcat " + wiki.replace(/-/g, '_')  + "-latest-all-titles-in-ns0.gz | shuf | head -" + n + " > " + file,
+			"zcat " + wiki.replace(/-/g, '_') + "-latest-all-titles-in-ns0.gz | shuf | head -" + n + " > " + file,
 			"head -2 " + file,
-			"cat " + file + " " + wiki + ".rc_titles.txt | sort | uniq | head -" + total + " > " + wiki + ".all_titles.txt",
+			"cat " + file + " " + wiki + ".rc_titles.txt | sort | uniq | shuf | head -" + total + " > " + wiki + ".all_titles.txt",
 		];
 
 		console.log("--- wiki " + w.prefix + "----");
