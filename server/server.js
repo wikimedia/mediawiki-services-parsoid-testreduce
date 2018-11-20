@@ -1116,7 +1116,7 @@ var diffResultWebCallback = function(req, res, flag, err, row) {
 		res.end(flagResult);
 	} else {
 		var commit = flag === '+' ? req.params[1] : req.params[0];
-		res.redirect('/result/' + commit + '/' + req.params[2] + '/' + req.params[3]);
+		res.redirect('/result/' + commit + '/' + encodeURIComponent(req.params[2]) + '/' + encodeURIComponent(req.params[3]));
 	}
 };
 
