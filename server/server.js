@@ -1209,7 +1209,7 @@ var startWebServer = Promise.method(function() {
 	app.get(/^\/latestresult\/([^\/]+)\/(.*)$/, resultWebInterface);
 
 	// Results for a title on any commit
-	app.get(/^\/result\/([\w\-_]*)\/([^\/]+)\/(.*)$/, resultWebInterface);
+	app.get(/^\/result\/([\w:\-_]*)\/([^\/]+)\/(.*)$/, resultWebInterface);
 
 	// List of failures sorted by severity
 	app.get(/^\/topfails\/(\d+)$/, failsWebInterface);
@@ -1233,10 +1233,10 @@ var startWebServer = Promise.method(function() {
 	app.get(/^\/topfixes\/between\/([^\/]+)\/([^\/]+)(?:\/(\d+))?$/, getTopfixes);
 
 	// Results for a title on a commit, flag skips/fails new since older commit
-	app.get(/^\/resultFlagNew\/([\w\-_]*)\/([\w\-_]*)\/([^\/]+)\/(.*)$/, resultFlagNewWebInterface);
+	app.get(/^\/resultFlagNew\/([\w:\-_]*)\/([\w:\-_]*)\/([^\/]+)\/(.*)$/, resultFlagNewWebInterface);
 
 	// Results for a title on a commit, flag skips/fails no longer in newer commit
-	app.get(/^\/resultFlagOld\/([\w\-_]*)\/([\w\-_]*)\/([^\/]+)\/(.*)$/, resultFlagOldWebInterface);
+	app.get(/^\/resultFlagOld\/([\w:\-_]*)\/([\w:\-_]*)\/([^\/]+)\/(.*)$/, resultFlagOldWebInterface);
 
 	// Distribution of fails
 	app.get(/^\/semanticDiffsDistr$/, getFailsDistr);
