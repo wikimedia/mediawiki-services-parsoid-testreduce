@@ -26,3 +26,11 @@ LANG="en fr it es"
 for l in $LANG ; do
     wget http://dumps.wikimedia.org/${l}wikivoyage/latest/${l}wikivoyage-latest-all-titles-in-ns0.gz
 done
+
+mv *.gz dumps/
+
+### NOTES ###
+# To fetch titles from all namespaces, here is what you can do
+# Download the $wiki-latest-all-titles.gz and run the following commands
+# gunzip < $wiki-latest-all-titles.gz | egrep "^0\s" | sed 's/^0\s*//g;' | gzip > $wiki.ns0.gz^C
+# gunzip < $wiki-latest-all-titles.gz | egrep "^1\s" | sed 's/^1\s*//g;' | gzip > $wiki.ns1.gz^C
