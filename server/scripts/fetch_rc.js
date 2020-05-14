@@ -68,7 +68,7 @@ wikis.forEach(function(obj) {
 	// So, we use a fraction of 1 for the talk namespace.
 	const count = Math.round(obj.limit/sum * (isTalk ? 1 : fraction) * testdb.size);
 	const prefix = obj.prefix;
-	const domain = prefix.replace(/wiki$/, '.wikipedia.org').
+	const domain = prefix.replace(/_/, '-').replace(/wiki$/, '.wikipedia.org').
 		replace(/wiktionary/, '.wiktionary.org').
 		replace(/wikisource/, '.wikisource.org').
 		replace(/wikivoyage/, '.wikivoyage.org');
