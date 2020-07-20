@@ -1,2 +1,2 @@
 'use strict';
-require('core-js/shim');
+//require('core-js/shim');
