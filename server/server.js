@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 "use strict";
-require('../core-upgrade.js');
 
 var bodyParser = require('body-parser');
 var busboy = require('connect-busboy');

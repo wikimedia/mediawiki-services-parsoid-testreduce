@@ -7,7 +7,6 @@
     "babybird": "^0.0.1",
     "body-parser": "^1.13.3",
     "connect-busboy": "^0.0.2",
-    "core-js": "^3.6.5",
     "events": "^0.5.0",
     "express": "^4.16.3",
     "express-handlebars": "^3.0.0",
@@ -27,8 +26,8 @@
     "eslint-plugin-jsdoc": "^23.0.0"
   },
   "scripts": {
-    "eslint": "eslint server client utils core-upgrade.js",
-    "eslint-fix": "eslint --fix server client utils core-upgrade.js",
+    "eslint": "eslint server client utils",
+    "eslint-fix": "eslint --fix server client utils",
     "lint": "npm run eslint"
   },
   "repository": {

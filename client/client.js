@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 'use strict';
-require('../core-upgrade.js');
 
 /**
  * A client for testing round-tripping of articles.

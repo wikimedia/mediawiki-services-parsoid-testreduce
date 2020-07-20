@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 'use strict';
-require('../../core-upgrade.js');
 const fs = require('fs');
 const request = require('request');
 const testdb = require('./testdb.info.js');

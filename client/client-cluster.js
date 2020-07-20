@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 'use strict';
-require('../core-upgrade.js');
 
 var cluster = require('cluster');
 var path = require('path');
