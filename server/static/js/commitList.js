@@ -1,4 +1,4 @@
-/*global $:false */
+/* global $:false */
 (function(exports) {
 	"use strict";
 

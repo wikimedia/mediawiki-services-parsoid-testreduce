@@ -74,7 +74,7 @@ var runTest = function(cb, test, retryCount) {
 	}
 	// Add a random (max 500ms) shift in case multiple testreduce
 	// clients fails and they don't all retry in lockstep fashion.
-	var timeoutVal = Math.round(Math.random()*500) + config.opts.testTimeout;
+	var timeoutVal = Math.round(Math.random() * 500) + config.opts.testTimeout;
 
 	config.runTest(config.opts, test).then(function(results) {
 		cb('postResult', null, results, test, null);

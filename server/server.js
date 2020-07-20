@@ -326,14 +326,14 @@ var dbFailsQuery =
 	'JOIN pages ON stats.page_id = pages.id ' +
 	'JOIN commits ON stats.commit_hash = commits.hash ' +
 	'ORDER BY stats.score DESC ' +
-	'LIMIT 40 OFFSET ?' ;
+	'LIMIT 40 OFFSET ?';
 
 var dbGetOneResult =
 	'SELECT result FROM results ' +
 	'JOIN commits ON results.commit_hash = commits.hash ' +
 	'JOIN pages ON pages.id = results.page_id ' +
 	'WHERE pages.title = ? AND pages.prefix = ? ' +
-	'ORDER BY commits.timestamp DESC LIMIT 1' ;
+	'ORDER BY commits.timestamp DESC LIMIT 1';
 
 var dbGetResultWithCommit =
     'SELECT result FROM results ' +
@@ -446,7 +446,7 @@ var transFetchCB = function(msg, trans, failCb, successCb, err, result) {
 	if (err) {
 		trans.rollback(function() {
 			if (failCb) {
-				failCb (msg? msg + err.toString() : err, result);
+				failCb(msg ? msg + err.toString() : err, result);
 			}
 		});
 	} else if (successCb) {
@@ -726,11 +726,11 @@ var statsWebInterface = function(req, res) {
 	};
 
 	db.query(dbLatestHash, [], function(err, row) {
-		if (err) return handleErr(err, res);
+		if (err) { return handleErr(err, res); }
 
 		var latestHash = row[0].hash;
 		db.query(dbPreviousHash, [], function(err, row) {
-			if (err) return handleErr(err, res);
+			if (err) { return handleErr(err, res); }
 			var previousHash = row.length > 0 ? row[0].hash : 'null';
 
 			// Switch the query object based on the prefix
@@ -755,7 +755,7 @@ var statsWebInterface = function(req, res) {
 
 			// Fetch stats for commit
 			db.query(query, queryParams, function(err, row) {
-				if (err) return handleErr(err, res);
+				if (err) { return handleErr(err, res); }
 
 				res.status(200);
 
@@ -1006,7 +1006,7 @@ var getSkipsDistr = function(req, res) {
 			var intervalData = [];
 			for (var i = 0; i < n; i++) {
 				var r = rows[i];
-				intervalData.push({errors: r.skips, pages: r.num_pages});
+				intervalData.push({ errors: r.skips, pages: r.num_pages });
 			}
 			var data = {
 				heading: 'Distribution of syntactic errors',
@@ -1035,7 +1035,7 @@ var getRegressions = function(req, res) {
 				urlSuffix: '',
 				heading: "Total regressions between selected revisions: " +
 					row[0].numRegressions,
-				headingLink: [{url: relativeUrlPrefix + 'topfixes/between/' + r1 + '/' + r2, name: 'topfixes'}],
+				headingLink: [{ url: relativeUrlPrefix + 'topfixes/between/' + r1 + '/' + r2, name: 'topfixes' }],
 				header: RH.regressionsHeaderData,
 			};
 			db.query(dbRegressionsBetweenRevs, [ r2, r1, offset ],
@@ -1061,7 +1061,7 @@ var getTopfixes = function(req, res) {
 				urlPrefix: relativeUrlPrefix + 'topfixes/between/' + r1 + '/' + r2,
 				urlSuffix: '',
 				heading: 'Total fixes between selected revisions: ' + row[0].numFixes,
-				headingLink: [{url: relativeUrlPrefix + "regressions/between/" + r1 + "/" + r2, name: 'regressions'}],
+				headingLink: [{ url: relativeUrlPrefix + "regressions/between/" + r1 + "/" + r2, name: 'regressions' }],
 				header: RH.regressionsHeaderData,
 			};
 			db.query(dbFixesBetweenRevs, [ r2, r1, offset ],
@@ -1081,7 +1081,7 @@ var getCommits = function(req, res) {
 			var tableRows = [];
 			for (var i = 0; i < n; i++) {
 				var row = rows[i];
-				var tableRow = {hash: row.hash, timestamp: row.timestamp};
+				var tableRow = { hash: row.hash, timestamp: row.timestamp };
 				if (i + 1 < n) {
 					tableRow.regUrl = 'regressions/between/' + rows[i + 1].hash + '/' + row.hash;
 					tableRow.fixUrl = 'topfixes/between/' + rows[i + 1].hash + '/' + row.hash;

@@ -95,7 +95,7 @@ RenderHelpers.displayPageList = function(res, data, makeRow, err, rows) {
 			var tableRows = [];
 			for (var i = 0; i < rows.length; i++) {
 				var row = rows[i];
-				var tableRow = {status: RH.pageStatus(row), tableData: makeRow(data.relativeUrlPrefix, row)};
+				var tableRow = { status: RH.pageStatus(row), tableData: makeRow(data.relativeUrlPrefix, row) };
 				tableRows.push(tableRow);
 			}
 			tableData.paginate = true;

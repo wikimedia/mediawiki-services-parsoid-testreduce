@@ -17,7 +17,7 @@ function generate_titles() {
 		const isTalk = w.ns === 1;
 		const fraction = isTalk ? 1 : testdb.dump_percentage / 100;
 		const wikiWithNS = isTalk ? `${wiki}_talk` : wiki;
-		const n = Math.round(w.limit/sum * fraction * testdb.size);
+		const n = Math.round(w.limit / sum * fraction * testdb.size);
 		const total = Math.round(n / fraction);
 		let commands;
 

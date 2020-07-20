@@ -28,9 +28,9 @@ function processRes(fetchArgs, out, err, resp, body) {
 		out);
 
 	// More to fetch?
-	const resContinue = body['continue'];
+	const resContinue = body.continue;
 	if (resContinue && fetchArgs.count > 0) {
-		fetchArgs.opts['continue'] = resContinue['continue'];
+		fetchArgs.opts.continue = resContinue.continue;
 		fetchArgs.opts.rccontinue = resContinue.rccontinue;
 		fetchAll(fetchArgs, out);
 	} else {
@@ -55,23 +55,23 @@ function fetchAll(fetchArgs, out) {
 
 	console.log('Fetching ' + opts.rclimit + ' results from ' + fetchArgs.prefix);
 	request(requestOpts, processRes.bind(null, fetchArgs, out));
-};
+}
 
 // SSS: +0.02 is so we fetch a few extra titles
 // to account for the title overlap between the list of
 // randomly generate titles and recently edited titles
-const sum = wikis.reduce(function(s, w) { return s + w.limit; }, 0)
-const fraction = ((1 - testdb.dump_percentage/100) + 0.02);
+const sum = wikis.reduce(function(s, w) { return s + w.limit; }, 0);
+const fraction = ((1 - testdb.dump_percentage / 100) + 0.02);
 wikis.forEach(function(obj) {
 	const isTalk = obj.ns === 1;
 	// For talk namespaces, we don't pick a fraction of titles from the dump.
 	// So, we use a fraction of 1 for the talk namespace.
-	const count = Math.round(obj.limit/sum * (isTalk ? 1 : fraction) * testdb.size);
+	const count = Math.round(obj.limit / sum * (isTalk ? 1 : fraction) * testdb.size);
 	const prefix = obj.prefix;
-	const domain = prefix.replace(/_/, '-').replace(/wiki$/, '.wikipedia.org').
-		replace(/wiktionary/, '.wiktionary.org').
-		replace(/wikisource/, '.wikisource.org').
-		replace(/wikivoyage/, '.wikivoyage.org');
+	const domain = prefix.replace(/_/, '-').replace(/wiki$/, '.wikipedia.org')
+		.replace(/wiktionary/, '.wiktionary.org')
+		.replace(/wikisource/, '.wikisource.org')
+		.replace(/wikivoyage/, '.wikivoyage.org');
 	const opts = {
 		action: 'query',
 		list: 'recentchanges',
