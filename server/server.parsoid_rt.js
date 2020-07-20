@@ -153,13 +153,13 @@ function setupEndpoints(settings, app, mysql, db, hbs) {
 		var offset = page * 40;
 		var relativeUrlPrefix = (req.params[1] ? '../../' : '../');
 		var data = {
-				page: page,
-				relativeUrlPrefix: relativeUrlPrefix,
-				urlPrefix: relativeUrlPrefix + 'rtselsererrors/' + commit,
-				urlSuffix: '',
-				heading: 'Pages with rt selser errors',
-				header: ['Title', 'Commit', 'Syntactic diffs', 'Semantic diffs', 'Errors'],
-			};
+			page: page,
+			relativeUrlPrefix: relativeUrlPrefix,
+			urlPrefix: relativeUrlPrefix + 'rtselsererrors/' + commit,
+			urlSuffix: '',
+			heading: 'Pages with rt selser errors',
+			header: ['Title', 'Commit', 'Syntactic diffs', 'Semantic diffs', 'Errors'],
+		};
 		var makeSelserErrorRow = function(urlPrefix, row) {
 			var prefix = encodeURIComponent(row.prefix);
 			var title = encodeURIComponent(row.title);

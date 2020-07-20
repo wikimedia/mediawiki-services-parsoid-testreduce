@@ -2,7 +2,7 @@
 
 module.exports = {
 	// How many titles do you want?
-	size: 15000,
+	size: 180000,
 
 	// How many of those do you want from the dumps?
 	// Rest will come from recent changes stream
@@ -38,7 +38,7 @@ module.exports = {
 		{ prefix: 'nowiki',  limit: 2 },
 
 		// Other language wikipedias
-		{ prefix: 'zh-yuewiki',  limit: 2 },
+		{ prefix: 'zh_yuewiki',  limit: 2 },
 		{ prefix: 'thwiki',  limit: 2 },
 		{ prefix: 'hiwiki',  limit: 2 },
 		{ prefix: 'bnwiki',  limit: 2 },
@@ -75,5 +75,12 @@ module.exports = {
 		{ prefix: 'frwikivoyage', limit: 1 },
 		{ prefix: 'itwikivoyage', limit: 1 },
 		{ prefix: 'eswikivoyage', limit: 1 },
-	]
+
+		// Talk namespaces from some wikis
+		{ prefix: 'enwiki',  ns: 1, limit: 5 },
+		{ prefix: 'itwiki',  ns: 1, limit: 2 },
+		{ prefix: 'dewiki',  ns: 1, limit: 3 },
+		{ prefix: 'hewiki',  ns: 1, limit: 1 },
+		{ prefix: 'zhwiki',  ns: 1, limit: 1 },
+	],
 };

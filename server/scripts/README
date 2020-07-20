@@ -1,27 +1,28 @@
 1. Prepare the scripts
-   Update download.sh, testdb_info.sh, importAll.sh
-   with wikis you want to download from and also set
-   the # titles and fractions for randomly picked titles
-   and recently edited pages.
- 
-2. Download latest title dumps by running download.sh
 
-3. Fetch recently edited titles by running fetch_rc.js
+   - Update testdb_info.sh with wikis you want to download from
+	  and also set the # titles and fractions for randomly picked
+	  titles and recently edited pages.
+   - If you have ns0 title dumps locally and don't need to download them,
+	  update gen_titles.js and toggle forceDumpsRefresh
 
-4. Run gen_titles.js to:
-   * generate random selection of titles 
+2. Fetch recently edited titles by running fetch_rc.js
+
+3. Run gen_titles.js to:
+	* downloads dumps
+   * generate random selection of titles
    * merge the two sets (random selection, recently edited) of
      titles and generate a single unique title list.
    * generate sql import scripts
 
-5. Upload/move the sql files to the right server/directory.
+4. Upload/move the sql files to the right server/directory.
 
-6. On your target server, use mysqladmin/mysql or whatever to
+5. On your target server, use mysqladmin/mysql or whatever to
    generate your new db.
 
-7. Init the db with the schema found in ../sql/create_everything.mysql
+6. If necessary, init the db with the schema found in ../sql/create_everything.mysql
 
-8. Run the mysql import scripts to populate your rt-testing db.
+7. Run the mysql import scripts to populate your rt-testing db.
 
 You are all done generating the new db.
 

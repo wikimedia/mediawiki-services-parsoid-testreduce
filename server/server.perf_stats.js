@@ -123,7 +123,7 @@ function setupEndpoints(settings, app, mysql, db) {
 					for (var j = 0; j < types.length; j++) {
 						var type = types[j];
 						var rowData = row[type] === null ? '' :
-							{type: type, value: row[type], info: row[type]};
+							{ type: type, value: row[type], info: row[type] };
 						result.push(rowData);
 					}
 					return result;
@@ -212,10 +212,10 @@ function setupEndpoints(settings, app, mysql, db) {
 							];
 							for (t = 0; t < types.length; t++) {
 								var rowData = row[types[t]] === null ? '' :
-									{type: types[t], value: row[types[t]], info: row[types[t]]};
+									{ type: types[t], value: row[types[t]], info: row[types[t]] };
 								tableRow.push(rowData);
 							}
-							tableRows.push({tableData: tableRow});
+							tableRows.push({ tableData: tableRow });
 						}
 
 						var data = {

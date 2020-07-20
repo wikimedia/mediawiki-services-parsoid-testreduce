@@ -1,4 +1,4 @@
-/*global initialCommitList, updateCommitList, $:false */
+/* global initialCommitList, updateCommitList, $:false */
 $(function() {
 	"use strict";
 
