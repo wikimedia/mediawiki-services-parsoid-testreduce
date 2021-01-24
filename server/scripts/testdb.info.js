@@ -2,7 +2,7 @@
 
 module.exports = {
 	// How many titles do you want?
-	size: 180000,
+	size: 190000,
 
 	// How many of those do you want from the dumps?
 	// Rest will come from recent changes stream
@@ -23,6 +23,10 @@ module.exports = {
 		{ prefix: 'svwiki',  limit: 8 },
 		{ prefix: 'warwiki', limit: 8 },
 		{ prefix: 'cebwiki', limit: 8 },
+
+		// Special wikis
+		{ prefix: 'commonswiki', limit: 6 },
+		{ prefix: 'metawiki', limit: 6 },
 
 		// 100K+ wikipedias (ordered by edits)
 		{ prefix: 'ptwiki',  limit: 6 },
@@ -78,8 +82,10 @@ module.exports = {
 
 		// Talk namespaces from some wikis
 		{ prefix: 'enwiki',  ns: 1, limit: 5 },
-		{ prefix: 'itwiki',  ns: 1, limit: 2 },
+		{ prefix: 'arwiki',  ns: 1, limit: 3 },
 		{ prefix: 'dewiki',  ns: 1, limit: 3 },
+		{ prefix: 'ptwiki',  ns: 1, limit: 2 },
+		{ prefix: 'itwiki',  ns: 1, limit: 2 },
 		{ prefix: 'hewiki',  ns: 1, limit: 1 },
 		{ prefix: 'zhwiki',  ns: 1, limit: 1 },
 	],

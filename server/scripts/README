@@ -1,6 +1,6 @@
 1. Prepare the scripts
 
-   - Update testdb_info.sh with wikis you want to download from
+   - Update testdb_info.js with wikis you want to download from
 	  and also set the # titles and fractions for randomly picked
 	  titles and recently edited pages.
    - If you have ns0 title dumps locally and don't need to download them,
