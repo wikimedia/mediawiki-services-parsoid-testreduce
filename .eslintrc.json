@@ -1,3 +1,4 @@
 {
-    "extends": "eslint-config-node-services"
+	"root": true,
+	"extends": "eslint-config-node-services"
 }
