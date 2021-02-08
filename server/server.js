@@ -39,6 +39,10 @@ var opts = yargs.usage('Usage: $0 [connection parameters]')
 		describe: 'Configuration file for the server',
 		'default': './server.settings.js',
 	})
+	.options('s', {
+		alias: 'socketPath',
+		describe: 'Socket path for the database server (if set, host/port will be ignored).',
+	})
 	.options('h', {
 		alias: 'host',
 		describe: 'Hostname of the database server.',
@@ -140,6 +144,7 @@ var debug = getOption('debug');
 
 var mysql = require('mysql');
 var db = mysql.createConnection({
+	socketPath:         getOption('socketPath'), // if set, host:port will be ignored
 	host:               getOption('host'),
 	port:               getOption('port'),
 	database:           getOption('database'),
