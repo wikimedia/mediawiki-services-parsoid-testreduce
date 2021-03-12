@@ -143,7 +143,7 @@ var batchSize = getOption('batch');
 var debug = getOption('debug');
 
 var mysql = require('mysql');
-var db = mysql.createConnection({
+var pool = mysql.createPool({
 	socketPath:         getOption('socketPath'), // if set, host:port will be ignored
 	host:               getOption('host'),
 	port:               getOption('port'),
@@ -151,22 +151,12 @@ var db = mysql.createConnection({
 	user:               getOption('user'),
 	password:           getOption('password'),
 	multipleStatements: true,
-	charset:            'UTF8_BIN',
+	charset:            'utf8mb4',
 	debug:              debug,
 });
 
-var queues = require('mysql-queues');
-queues(db, debug);
-
-// Try connecting to the database.
 process.on('exit', function() {
-	db.end();
-});
-db.connect(function(err) {
-	if (err) {
-		console.error("Unable to connect to database, error: " + err.toString());
-		process.exit(1);
-	}
+	pool.end();
 });
 
 // ----------------- The queries --------------
@@ -446,43 +436,57 @@ var dbGetTwoResults =
 	'AND (commits.hash = ? OR commits.hash = ?) ' +
 	'ORDER BY commits.timestamp';
 
-var transFetchCB = function(msg, trans, failCb, successCb, err, result) {
+var fetchCB = function(msg, failCb, successCb, err, result) {
 	if (err) {
-		trans.rollback(function() {
-			if (failCb) {
-				failCb(msg ? msg + err.toString() : err, result);
-			}
-		});
+		if (failCb) {
+			failCb(msg ? msg + err.toString() : err, result);
+		}
 	} else if (successCb) {
 		successCb(result);
 	}
 };
 
 var fetchPages = function(commitHash, cutOffTimestamp, cb) {
-	var trans = db.startTransaction();
-	trans.query(dbGetTitle, [maxFetchRetries, commitHash, maxTries, cutOffTimestamp, batchSize], transFetchCB.bind(null, 'Error getting next titles', trans, cb, function(rows) {
-		if (!rows || rows.length === 0) {
-			trans.commit(cb.bind(null, null, rows));
-		} else {
-			// Process the rows: Weed out the crashers.
-			var pages = [];
-			var pageIds = [];
-			for (var i = 0; i < rows.length; i++) {
-				var row = rows[i];
-				pageIds.push(row.id);
-				pages.push({ id: row.id, prefix: row.prefix, title: row.title });
-			}
-			trans.query(dbUpdatePageClaims, [commitHash, new Date(), pageIds], transFetchCB.bind(null, 'Error updating claims', trans, cb, function() {
-				trans.commit(cb.bind(null, null, pages));
+	pool.getConnection(function (err, connection) {
+		if (err) return handleErr(connection, err, res);
+		connection.beginTransaction(function(err) {
+			if (err) return handleErr(connection, err, res);
+
+			pool.query(dbGetTitle, [maxFetchRetries, commitHash, maxTries, cutOffTimestamp, batchSize], fetchCB.bind(null, 'Error getting next titles', cb, function(rows) {
+				if (!rows || rows.length === 0) {
+					cb(null, rows);
+					connection.commit();
+					connection.release();
+				} else {
+					// Process the rows: Weed out the crashers.
+					var pages = [];
+					var pageIds = [];
+					for (var i = 0; i < rows.length; i++) {
+						var row = rows[i];
+						pageIds.push(row.id);
+						pages.push({ id: row.id, prefix: row.prefix, title: row.title });
+					}
+					pool.query(dbUpdatePageClaims, [commitHash, new Date(), pageIds], fetchCB.bind(null, 'Error updating claims', cb, function() {
+						cb(null, pages);
+						connection.commit();
+						connection.release();
+					}));
+				}
 			}));
-		}
-	})).execute();
+		});
+	});
 };
 
 var fetchedPages = [];
 var lastFetchedCommit = null;
 var lastFetchedDate = new Date(0);
 var knownCommits;
+
+function handleErr(connection, err, res) {
+	if (connection) connection.release();
+	console.log(err);
+	res.status(500).send(err.toString());
+}
 
 var getTitle = function(req, res) {
 	var commitHash = req.query.commit;
@@ -497,33 +501,41 @@ var getTitle = function(req, res) {
 	// Use a transaction to make sure we don't start fetching pages until
 	// we've done this
 	if (!knownCommit) {
-		var trans = db.startTransaction();
-		if (!knownCommits) {
-			knownCommits = {};
-			trans.query(dbCommitHashes, null, function(err, resCommitHashes) {
-				if (err) {
-					console.log('Error fetching known commits', err);
-				} else {
-					resCommitHashes.forEach(function(v) {
-						knownCommits[v.hash] = commitDate;
+		pool.getConnection(function (err, connection) {
+			if (err) return handleErr(connection, err, res);
+
+			connection.beginTransaction(function(err) {
+				if (err) return handleErr(connection, err, res);
+
+				if (!knownCommits) {
+					knownCommits = {};
+					connection.query(dbCommitHashes, null, function(err, resCommitHashes) {
+						if (err) {
+							console.log('Error fetching known commits', err);
+						} else {
+							resCommitHashes.forEach(function(v) {
+								knownCommits[v.hash] = commitDate;
+							});
+						}
 					});
 				}
+
+				// New commit, record it
+				knownCommits[ commitHash ] = commitDate;
+				connection.query(dbInsertCommit, [ commitHash, new Date() ], function(err, commitInsertResult) {
+					if (err) {
+						console.error("Error inserting commit " + commitHash);
+					} else if (commitInsertResult.affectedRows > 0) {
+						// If this is a new commit, we need to clear the number of times a
+						// crasher page has been sent out so that each title gets retested
+						connection.query(dbUpdateCrashersClearTries, [ commitHash, maxTries ]);
+					}
+				});
+
+				connection.commit();
+				connection.release();
 			});
-		}
-
-		// New commit, record it
-		knownCommits[ commitHash ] = commitDate;
-		trans.query(dbInsertCommit, [ commitHash, new Date() ], function(err, commitInsertResult) {
-			if (err) {
-				console.error("Error inserting commit " + commitHash);
-			} else if (commitInsertResult.affectedRows > 0) {
-				// If this is a new commit, we need to clear the number of times a
-				// crasher page has been sent out so that each title gets retested
-				trans.query(dbUpdateCrashersClearTries, [ commitHash, maxTries ]);
-			}
 		});
-
-		trans.commit();
 	}
 	if (knownCommit && commitHash !== lastFetchedCommit) {
 		// It's an old commit, tell the client so it can restart.
@@ -627,81 +639,93 @@ var receiveResults = function(req, res) {
 
 	res.setHeader('Content-Type', 'text/plain; charset=UTF-8');
 
-	var trans = db.startTransaction();
-	var transUpdateCB = function(type, successCb, err, result2) {
-		if (err) {
-			trans.rollback();
-			var msg = "Error inserting/updating " + type + " for page: " +  prefix + ':' + title + " and hash: " + commitHash;
-			console.error(msg);
-			console.error(err);
-			if (res) {
-				res.status(500).send(msg);
-			}
-		} else if (successCb) {
-			successCb(result2);
-		}
-	};
+	pool.getConnection(function (err, connection) {
+		if (err) return handleErr(connection, err, res);
 
-	// console.warn("got: " + JSON.stringify([title, commitHash, result, skipCount, failCount, errorCount]));
-	if (errorCount > 0 && dneError) {
-		// Page fetch error, increment the fetch error count so, when it goes
-		// over maxFetchRetries, it won't be considered for tests again.
-		console.log('XX', prefix + ':' + title);
-		trans.query(dbIncrementFetchErrorCount, [commitHash, title, prefix],
-				transUpdateCB.bind(null, "page fetch error count", null))
-			.commit(function(err) {
+		connection.beginTransaction(function(err) {
+			if (err) return handleErr(connection, err, res);
+
+			var transUpdateCB = function(type, successCb, err, result2) {
 				if (err) {
-					console.error("Error incrementing fetch count: " + err.toString());
+					connection.rollback();
+					var msg = "Error inserting/updating " + type + " for page: " +  prefix + ':' + title + " and hash: " + commitHash;
+					console.error(msg);
+					console.error(err);
+					if (res) {
+						res.status(500).send(msg);
+					}
+				} else if (successCb) {
+					successCb(result2);
 				}
-				res.status(200).send('');
-			});
+			};
 
-	} else {
-		trans.query(dbFindPage, [ title, prefix ], function(err, pages) {
-			if (!err && pages.length === 1) {
-				// Found the correct page, fill the details up
-				var page = pages[0];
+			// console.warn("got: " + JSON.stringify([title, commitHash, result, skipCount, failCount, errorCount]));
+			if (errorCount > 0 && dneError) {
+				// Page fetch error, increment the fetch error count so, when it goes
+				// over maxFetchRetries, it won't be considered for tests again.
+				console.log('XX', prefix + ':' + title);
+				connection.query(dbIncrementFetchErrorCount, [commitHash, title, prefix], function(err, results) {
+					transUpdateCB("page fetch error count", null, err, results);
+					connection.commit(function(err) {
+						if (err) {
+							console.error("Error incrementing fetch count: " + err.toString());
+						}
+						res.status(200).send('');
+					});
+					connection.release();
+				});
 
-				var score = statsScore(skipCount, failCount, errorCount);
-				var latestResultId = 0;
-				var latestStatId = 0;
-				// Insert the result
-				trans.query(dbInsertResult, [ page.id, commitHash, resultString ],
-					transUpdateCB.bind(null, "result", function(insertedResult) {
-						latestResultId = insertedResult.insertId;
-						// Insert the stats
-						trans.query(dbInsertStats, [ skipCount, failCount, errorCount, selserErrorCount, score, page.id, commitHash ],
-							transUpdateCB.bind(null, "stats", function(insertedStat) {
-								latestStatId = insertedStat.insertId;
-
-								// And now update the page with the latest info
-								trans.query(dbUpdatePageLatestResults, [ latestStatId, score, latestResultId, commitHash, page.id ],
-										transUpdateCB.bind(null, "latest result", null))
-									.commit(function() {
-										console.log('<- ', prefix + ':' + title, ':', skipCount, failCount,
-											errorCount, commitHash.substr(0, 7));
-
-										if (perfConfig) {
-											// Insert the performance stats, ignoring errors for now
-											perfConfig.insertPerfStats(db, page.id, commitHash, perfstats, function() {});
-										}
-
-										// Maybe the perfstats aren't committed yet, but it shouldn't be a problem
-										res.status(200).send('');
-									});
-							}));
-					}));
 			} else {
-				trans.rollback(function() {
-					if (err) {
-						res.status(500).send(err.toString());
+				connection.query(dbFindPage, [ title, prefix ], function(err, pages) {
+					if (!err && pages.length === 1) {
+						// Found the correct page, fill the details up
+						var page = pages[0];
+
+						var score = statsScore(skipCount, failCount, errorCount);
+						var latestResultId = 0;
+						var latestStatId = 0;
+						// Insert the result
+						connection.query(dbInsertResult, [ page.id, commitHash, resultString ],
+							transUpdateCB.bind(null, "result", function(insertedResult) {
+								latestResultId = insertedResult.insertId;
+								// Insert the stats
+								connection.query(dbInsertStats, [ skipCount, failCount, errorCount, selserErrorCount, score, page.id, commitHash ],
+									transUpdateCB.bind(null, "stats", function(insertedStat) {
+										latestStatId = insertedStat.insertId;
+
+										// And now update the page with the latest info
+										connection.query(dbUpdatePageLatestResults, [ latestStatId, score, latestResultId, commitHash, page.id ], function(err, results) {
+											transUpdateCB.bind("latest result", null, err, results);
+											connection.commit(function() {
+												console.log('<- ', prefix + ':' + title, ':', skipCount, failCount,
+													errorCount, commitHash.substr(0, 7));
+
+												if (perfConfig) {
+													// Insert the performance stats, ignoring errors for now
+													perfConfig.insertPerfStats(pool, page.id, commitHash, perfstats, function() {});
+												}
+
+												// Maybe the perfstats aren't committed yet, but it shouldn't be a problem
+												res.status(200).send('');
+											});
+											connection.release();
+										});
+									}));
+							}));
 					} else {
-						res.status(200).send("Did not find claim for title: " + prefix + ':' + title);
+						connection.rollback(function() {
+							if (err) {
+								res.status(500).send(err.toString());
+							} else {
+								res.status(200).send("Did not find claim for title: " + prefix + ':' + title);
+							}
+						});
+						connection.release();
 					}
 				});
 			}
-		}).execute();
-	}
+		});
+	});
 };
 
 var pageListData = [
@@ -725,16 +749,12 @@ var statsWebInterface = function(req, res) {
 	var cutoffDate = new Date(Date.now() - (cutOffTime * 1000));
 	var prefix = req.params[1] || null;
 
-	var handleErr = function(err, res) {
-		res.status(500).send(err.toString());
-	};
-
-	db.query(dbLatestHash, [], function(err, row) {
-		if (err) { return handleErr(err, res); }
+	pool.query(dbLatestHash, [], function(err, row) {
+		if (err) { return handleErr(null, err, res); }
 
 		var latestHash = row[0].hash;
-		db.query(dbPreviousHash, [], function(err, row) {
-			if (err) { return handleErr(err, res); }
+		pool.query(dbPreviousHash, [], function(err, row) {
+			if (err) { return handleErr(null, err, res); }
 			var previousHash = row.length > 0 ? row[0].hash : 'null';
 
 			// Switch the query object based on the prefix
@@ -758,8 +778,8 @@ var statsWebInterface = function(req, res) {
 			}
 
 			// Fetch stats for commit
-			db.query(query, queryParams, function(err, row) {
-				if (err) { return handleErr(err, res); }
+			pool.query(query, queryParams, function(err, row) {
+				if (err) { return handleErr(null, err, res); }
 
 				res.status(200);
 
@@ -854,7 +874,7 @@ var failsWebInterface = function(req, res) {
 		heading: 'Results by title',
 		header: ['Title', 'Commit', 'Errors', 'Semantic diffs', 'Syntactic diffs'],
 	};
-	db.query(dbFailsQuery, [ offset ],
+	pool.query(dbFailsQuery, [ offset ],
 		RH.displayPageList.bind(null, res, data, makeFailsRow));
 };
 
@@ -870,7 +890,7 @@ var resultsWebInterface = function(req, res) {
 		queryParams = [];
 	}
 
-	db.query(query, queryParams, function(err, rows) {
+	pool.query(query, queryParams, function(err, rows) {
 		if (err) {
 			console.error(err);
 			res.status(500).send(err.toString());
@@ -909,14 +929,14 @@ var resultWebInterface = function(req, res) {
 	var prefix = commit === null ? req.params[0] : req.params[1];
 
 	if (commit !== null) {
-		db.query(dbGetResultWithCommit, [ commit, title, prefix ], resultWebCallback.bind(null, req, res));
+		pool.query(dbGetResultWithCommit, [ commit, title, prefix ], resultWebCallback.bind(null, req, res));
 	} else {
-		db.query(dbGetOneResult, [ title, prefix ], resultWebCallback.bind(null, req, res));
+		pool.query(dbGetOneResult, [ title, prefix ], resultWebCallback.bind(null, req, res));
 	}
 };
 
 var getFailedFetches = function(req, res) {
-	db.query(dbFailedFetches, [maxFetchRetries], function(err, rows) {
+	pool.query(dbFailedFetches, [maxFetchRetries], function(err, rows) {
 		if (err) {
 			console.error(err);
 			res.status(500).send(err.toString());
@@ -947,7 +967,7 @@ var getFailedFetches = function(req, res) {
 
 var getCrashers = function(req, res) {
 	var cutoffDate = new Date(Date.now() - (cutOffTime * 1000));
-	db.query(dbCrashers, [ maxTries, cutoffDate ], function(err, rows) {
+	pool.query(dbCrashers, [ maxTries, cutoffDate ], function(err, rows) {
 		if (err) {
 			console.error(err);
 			res.status(500).send(err.toString());
@@ -978,7 +998,7 @@ var getCrashers = function(req, res) {
 };
 
 var getFailsDistr = function(req, res) {
-	db.query(dbFailsDistribution, null, function(err, rows) {
+	pool.query(dbFailsDistribution, null, function(err, rows) {
 		if (err) {
 			console.error(err);
 			res.status(500).send(err.toString());
@@ -1000,7 +1020,7 @@ var getFailsDistr = function(req, res) {
 };
 
 var getSkipsDistr = function(req, res) {
-	db.query(dbSkipsDistribution, null, function(err, rows) {
+	pool.query(dbSkipsDistribution, null, function(err, rows) {
 		if (err) {
 			console.error(err);
 			res.status(500).send(err.toString());
@@ -1028,7 +1048,7 @@ var getRegressions = function(req, res) {
 	var offset = page * 40;
 	var relativeUrlPrefix = '../../../';
 	relativeUrlPrefix = relativeUrlPrefix + (req.params[0] ? '../' : '');
-	db.query(dbNumRegressionsBetweenRevs, [ r2, r1 ], function(err, row) {
+	pool.query(dbNumRegressionsBetweenRevs, [ r2, r1 ], function(err, row) {
 		if (err) {
 			res.status(500).send(err.toString());
 		} else {
@@ -1042,7 +1062,7 @@ var getRegressions = function(req, res) {
 				headingLink: [{ url: relativeUrlPrefix + 'topfixes/between/' + r1 + '/' + r2, name: 'topfixes' }],
 				header: RH.regressionsHeaderData,
 			};
-			db.query(dbRegressionsBetweenRevs, [ r2, r1, offset ],
+			pool.query(dbRegressionsBetweenRevs, [ r2, r1, offset ],
 				RH.displayPageList.bind(null, res, data, RH.makeRegressionRow));
 		}
 	});
@@ -1055,7 +1075,7 @@ var getTopfixes = function(req, res) {
 	var offset = page * 40;
 	var relativeUrlPrefix = '../../../';
 	relativeUrlPrefix = relativeUrlPrefix + (req.params[0] ? '../' : '');
-	db.query(dbNumFixesBetweenRevs, [ r2, r1 ], function(err, row) {
+	pool.query(dbNumFixesBetweenRevs, [ r2, r1 ], function(err, row) {
 		if (err) {
 			res.status(500).send(err.toString());
 		} else {
@@ -1068,14 +1088,14 @@ var getTopfixes = function(req, res) {
 				headingLink: [{ url: relativeUrlPrefix + "regressions/between/" + r1 + "/" + r2, name: 'regressions' }],
 				header: RH.regressionsHeaderData,
 			};
-			db.query(dbFixesBetweenRevs, [ r2, r1, offset ],
+			pool.query(dbFixesBetweenRevs, [ r2, r1, offset ],
 				RH.displayPageList.bind(null, res, data, RH.makeRegressionRow));
 		}
 	});
 };
 
 var getCommits = function(req, res) {
-	db.query(dbCommits, null, function(err, rows) {
+	pool.query(dbCommits, null, function(err, rows) {
 		if (err) {
 			console.error(err);
 			res.status(500).send(err.toString());
@@ -1130,7 +1150,7 @@ var resultFlagNewWebInterface = function(req, res) {
 	var prefix = req.params[2];
 	var title = req.params[3];
 
-	db.query(dbGetTwoResults, [ title, prefix, oldCommit, newCommit ],
+	pool.query(dbGetTwoResults, [ title, prefix, oldCommit, newCommit ],
 		diffResultWebCallback.bind(null, req, res, '+'));
 };
 
@@ -1140,7 +1160,7 @@ var resultFlagOldWebInterface = function(req, res) {
 	var prefix = req.params[2];
 	var title = req.params[3];
 
-	db.query(dbGetTwoResults, [ title, prefix, oldCommit, newCommit ],
+	pool.query(dbGetTwoResults, [ title, prefix, oldCommit, newCommit ],
 		diffResultWebCallback.bind(null, req, res, '-'));
 };
 
@@ -1314,11 +1334,11 @@ var startWebServer = Promise.method(function() {
 	app.engine('html', ve.engine);
 
 	if (parsoidRTConfig) {
-		parsoidRTConfig.setupEndpoints(settings, app, mysql, db, ve.handlebars);
+		parsoidRTConfig.setupEndpoints(settings, app, mysql, pool, ve.handlebars);
 	}
 
 	if (perfConfig) {
-		perfConfig.setupEndpoints(settings, app, mysql, db);
+		perfConfig.setupEndpoints(settings, app, mysql, pool);
 	}
 
 	var webServer;
