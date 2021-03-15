@@ -446,7 +446,7 @@ var fetchCB = function(msg, failCb, successCb, err, result) {
 	}
 };
 
-var fetchPages = function(commitHash, cutOffTimestamp, cb) {
+var fetchPages = function(commitHash, cutOffTimestamp, cb, res) {
 	pool.getConnection(function (err, connection) {
 		if (err) return handleErr(connection, err, res);
 		connection.beginTransaction(function(err) {
@@ -588,7 +588,7 @@ var getTitle = function(req, res) {
 
 		lastFetchedCommit = commitHash;
 		lastFetchedDate = new Date();
-		fetchPages(commitHash, new Date(Date.now() - (cutOffTime * 1000)), fetchCb);
+		fetchPages(commitHash, new Date(Date.now() - (cutOffTime * 1000)), fetchCb, res);
 	} else {
 		fetchCb();
 	}
