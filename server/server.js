@@ -452,7 +452,7 @@ var fetchPages = function(commitHash, cutOffTimestamp, cb, res) {
 		connection.beginTransaction(function(err) {
 			if (err) return handleErr(connection, err, res);
 
-			pool.query(dbGetTitle, [maxFetchRetries, commitHash, maxTries, cutOffTimestamp, batchSize], fetchCB.bind(null, 'Error getting next titles', cb, function(rows) {
+			connection.query(dbGetTitle, [maxFetchRetries, commitHash, maxTries, cutOffTimestamp, batchSize], fetchCB.bind(null, 'Error getting next titles', cb, function(rows) {
 				if (!rows || rows.length === 0) {
 					cb(null, rows);
 					connection.commit();
@@ -466,7 +466,7 @@ var fetchPages = function(commitHash, cutOffTimestamp, cb, res) {
 						pageIds.push(row.id);
 						pages.push({ id: row.id, prefix: row.prefix, title: row.title });
 					}
-					pool.query(dbUpdatePageClaims, [commitHash, new Date(), pageIds], fetchCB.bind(null, 'Error updating claims', cb, function() {
+					connection.query(dbUpdatePageClaims, [commitHash, new Date(), pageIds], fetchCB.bind(null, 'Error updating claims', cb, function() {
 						cb(null, pages);
 						connection.commit();
 						connection.release();
