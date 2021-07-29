@@ -142,7 +142,7 @@ var cutOffTime = getOption('cutofftime');
 var batchSize = getOption('batch');
 var debug = getOption('debug');
 
-var mysql = require('mysql');
+var mysql = require('mysql2');
 var pool = mysql.createPool({
 	socketPath:         getOption('socketPath'), // if set, host:port will be ignored
 	host:               getOption('host'),

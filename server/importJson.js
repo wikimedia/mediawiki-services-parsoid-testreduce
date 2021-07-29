@@ -77,7 +77,7 @@ var getOption = function(opt) {
 	}
 };
 
-var mysql = require('mysql');
+var mysql = require('mysql2');
 var db = mysql.createConnection({
 	host:               getOption('host'),
 	port:               getOption('port'),
