@@ -715,8 +715,10 @@ var receiveResults = function(req, res) {
 					} else {
 						connection.rollback(function() {
 							if (err) {
+								console.log('XX', prefix + ':' + title + "; ERR: " + err);
 								res.status(500).send(err.toString());
 							} else {
+								console.log('XX', prefix + ':' + title + "; found non-unique pages. count: " + pages.length);
 								res.status(200).send("Did not find claim for title: " + prefix + ':' + title);
 							}
 						});
