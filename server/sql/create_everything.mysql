@@ -42,9 +42,10 @@ CREATE TABLE stats (
 CREATE UNIQUE INDEX stats_page_commit_idx ON stats ( page_id, commit_hash );
 
 CREATE TABLE perfstats (
+	id INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,
 	page_id INTEGER NOT NULL,
 	commit_hash CHAR( 40 ) NOT NULL,
 	type CHAR( 30 ) NOT NULL,
-	PRIMARY KEY( page_id, commit_hash, type ),
 	value INTEGER NOT NULL
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8_bin;
+CREATE UNIQUE INDEX perfstats_page_commit_idx_type ON perfstats ( page_id, commit_hash, type );
