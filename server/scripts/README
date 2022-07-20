@@ -6,23 +6,25 @@
    - If you have ns0 title dumps locally and don't need to download them,
 	  update gen_titles.js and toggle forceDumpsRefresh
 
-2. Fetch recently edited titles by running fetch_rc.js
+2. Fetch top ranked titles by running fetch_top_ranked.js
 
-3. Run gen_titles.js to:
+3. Fetch recently edited titles by running fetch_rc.js
+
+4. Run gen_titles.js to:
 	* downloads dumps
    * generate random selection of titles
    * merge the two sets (random selection, recently edited) of
      titles and generate a single unique title list.
    * generate sql import scripts
 
-4. Upload/move the sql files to the right server/directory.
+5. Upload/move the sql files to the right server/directory.
 
-5. On your target server, use mysqladmin/mysql or whatever to
+6. On your target server, use mysqladmin/mysql or whatever to
    generate your new db.
 
-6. If necessary, init the db with the schema found in ../sql/create_everything.mysql
+7. If necessary, init the db with the schema found in ../sql/create_everything.mysql
 
-7. Run the mysql import scripts to populate your rt-testing db.
+8. Run the mysql import scripts to populate your rt-testing db.
 
 You are all done generating the new db.
 

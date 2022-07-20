@@ -8,7 +8,7 @@ const testdb = require('./testdb.info.js');
 const wikis = testdb.wikis;
 const Promise = require('prfun/wrap')(require('babybird'));
 const execP = Promise.promisify(cp.exec, ['stdout', 'stderr'], cp);
-const forceDumpsRefresh = true;
+const forceDumpsRefresh = false;
 
 function generate_titles() {
 	const sum = wikis.reduce(function(s, w) { return s + w.limit; }, 0);
@@ -41,7 +41,7 @@ function generate_titles() {
 			commands = commands.concat([
 				`zcat ${dumpFile} | shuf | head -${n} > ${file}`,
 				`head -2 ${file}`,
-				`cat ${file} ${wikiWithNS}.rc_titles.txt | sort | uniq | shuf | head -${total} > ${wikiWithNS}.all_titles.txt`,
+				`cat ${file} ${wiki}.top_titles.txt ${wikiWithNS}.rc_titles.txt | sort | uniq | shuf | head -${total} > ${wikiWithNS}.all_titles.txt`,
 			]);
 			console.log(`Generating ${n} random titles from dump`);
 		}

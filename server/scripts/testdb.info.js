@@ -4,6 +4,9 @@ module.exports = {
 	// How many titles do you want?
 	size: 190000,
 
+	// How many of those do you want from traffic popularity
+	popular_pages_percentage: 2,
+
 	// How many of those do you want from the dumps?
 	// Rest will come from recent changes stream
 	dump_percentage: 75,
