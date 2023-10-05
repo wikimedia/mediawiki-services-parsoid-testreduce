@@ -1,17 +1,17 @@
 1. Prepare the scripts
 
-   - Update testdb_info.js with wikis you want to download from
-	  and also set the # titles and fractions for randomly picked
-	  titles and recently edited pages.
+   - Update testdb.info.js with wikis you want to download from
+     and also set the # titles and fractions for randomly picked
+     titles and recently edited pages.
    - If you have ns0 title dumps locally and don't need to download them,
-	  update gen_titles.js and toggle forceDumpsRefresh
+     update gen_titles.js and toggle forceDumpsRefresh
 
 2. Fetch top ranked titles by running fetch_top_ranked.js
 
 3. Fetch recently edited titles by running fetch_rc.js
 
 4. Run gen_titles.js to:
-	* downloads dumps
+   * downloads dumps
    * generate random selection of titles
    * merge the two sets (random selection, recently edited) of
      titles and generate a single unique title list.
