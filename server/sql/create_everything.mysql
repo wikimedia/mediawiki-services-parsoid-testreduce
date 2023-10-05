@@ -18,7 +18,6 @@ CREATE TABLE pages (
 	claim_num_tries INTEGER NOT NULL DEFAULT 0
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
 CREATE INDEX title_idx ON pages ( title ( 50 ) );
-CREATE INDEX latest_tries_score_idx ON pages ( claim_num_tries, latest_score );
 CREATE UNIQUE INDEX title_prefix_idx ON pages ( title ( 50 ), prefix );
 
 CREATE TABLE results (

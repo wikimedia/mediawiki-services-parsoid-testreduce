@@ -166,8 +166,7 @@ var dbGetTitle =
 	'  FROM pages ' +
 	'  WHERE num_fetch_errors < ? AND ' +
 	'  ( claim_hash != ? OR ( claim_num_tries < ? AND claim_timestamp < ? ) )' +
-	'  ORDER BY claim_num_tries DESC, latest_score DESC, ' +
-	'  claim_timestamp ASC LIMIT 500 ' +
+	'  ORDER BY claim_num_tries DESC, claim_timestamp ASC LIMIT 500 ' +
 	// Stop other transactions from reading until we finish this one.
 	'  FOR UPDATE' +
 	') AS titles ORDER BY RAND() LIMIT ?';
