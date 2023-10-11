@@ -35,21 +35,21 @@ RenderHelpers.pageTitleData = function(urlPrefix, row) {
 RenderHelpers.commitLinkData = function(urlPrefix, commit, title, wiki) {
 	return {
 		url: urlPrefix + 'result/' + commit + '/' + wiki + '/' + title,
-		name: commit.substr(0, 16),
+		name: commit.slice(0, 16),
 	};
 };
 
 RenderHelpers.newCommitLinkData = function(urlPrefix, oldCommit, newCommit, title, prefix) {
 	return {
 		url: urlPrefix + 'resultFlagNew/' + oldCommit + '/' + newCommit + '/' + prefix + '/' + title,
-		name: newCommit.substr(0, 16),
+		name: newCommit.slice(0, 16),
 	};
 };
 
 RenderHelpers.oldCommitLinkData = function(urlPrefix, oldCommit, newCommit, title, prefix) {
 	return {
 		url: urlPrefix + 'resultFlagOld/' + oldCommit + '/' + newCommit + '/' + prefix + '/' + title,
-		name: oldCommit.substr(0, 16),
+		name: oldCommit.slice(0, 16),
 	};
 };
 

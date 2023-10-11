@@ -13,7 +13,8 @@ var Utils = {};
  * Perform a HTTP request using the 'request' package, and retry on failures
  *
  * Only use on idempotent HTTP end points
- * @param {Number} retries The number of retries to attempt.
+ *
+ * @param {number} retries The number of retries to attempt.
  * @param {Object} requestOptions Request options.
  * @param {Function} cb Request callback.
  * @param {Error} cb.error

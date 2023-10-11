@@ -18,7 +18,7 @@ function processRes(fetchArgs, out, err, resp, body) {
 		return;
 	}
 
-	let titles = [];
+	const titles = [];
 	const res = JSON.parse(body);
 	const articles = res.items[0].articles;
 	const n = fetchArgs.count < articles.length ? fetchArgs.count : articles.length;

@@ -131,7 +131,7 @@ function getOption(opt) {
 		}
 	}
 	return value;
-};
+}
 
 // The maximum number of tries per article
 const maxTries = getOption('tries');
@@ -443,13 +443,13 @@ function fetchCB(msg, failCb, successCb, err, result) {
 	} else if (successCb) {
 		successCb(result);
 	}
-};
+}
 
 function fetchPages(commitHash, cutOffTimestamp, cb, res) {
 	pool.getConnection(function (err, connection) {
-		if (err) return handleErr(connection, err, res);
+		if (err) { return handleErr(connection, err, res); }
 		connection.beginTransaction(function(err) {
-			if (err) return handleErr(connection, err, res);
+			if (err) { return handleErr(connection, err, res); }
 
 			connection.query(dbGetTitle, [maxFetchRetries, commitHash, maxTries, cutOffTimestamp, batchSize], fetchCB.bind(null, 'Error getting next titles', cb, function(rows) {
 				if (!rows || rows.length === 0) {
@@ -474,7 +474,7 @@ function fetchPages(commitHash, cutOffTimestamp, cb, res) {
 			}));
 		});
 	});
-};
+}
 
 let fetchedPages = [];
 let lastFetchedCommit = null;
@@ -482,15 +482,15 @@ let lastFetchedDate = new Date(0);
 let knownCommits;
 
 function handleErr(connection, err, res) {
-	if (connection) connection.release();
+	if (connection) { connection.release(); }
 	console.log(err);
 	res.status(500).send(err.toString());
 }
 
 function getTitle(req, res) {
-	let commitHash = req.query.commit;
-	let commitDate = new Date(req.query.ctime);
-	let knownCommit = knownCommits && knownCommits[ commitHash ];
+	const commitHash = req.query.commit;
+	const commitDate = new Date(req.query.ctime);
+	const knownCommit = knownCommits && knownCommits[ commitHash ];
 
 	req.connection.setTimeout(300 * 1000);
 	res.setHeader('Content-Type', 'text/plain; charset=UTF-8');
@@ -501,10 +501,10 @@ function getTitle(req, res) {
 	// we've done this
 	if (!knownCommit) {
 		pool.getConnection(function (err, connection) {
-			if (err) return handleErr(connection, err, res);
+			if (err) { return handleErr(connection, err, res); }
 
 			connection.beginTransaction(function(err) {
-				if (err) return handleErr(connection, err, res);
+				if (err) { return handleErr(connection, err, res); }
 
 				if (!knownCommits) {
 					knownCommits = {};
@@ -590,13 +590,13 @@ function getTitle(req, res) {
 	} else {
 		fetchCB2();
 	}
-};
+}
 
 function statsScore(skipCount, failCount, errorCount) {
 	// treat <errors,fails,skips> as digits in a base 1000 system
 	// and use the number as a score which can help sort in topfails.
 	return errorCount * 1000000 + failCount * 1000 + skipCount;
-};
+}
 
 function receiveResults(req, res) {
 	req.connection.setTimeout(300 * 1000);
@@ -636,10 +636,10 @@ function receiveResults(req, res) {
 	res.setHeader('Content-Type', 'text/plain; charset=UTF-8');
 
 	pool.getConnection(function (err, connection) {
-		if (err) return handleErr(connection, err, res);
+		if (err) { return handleErr(connection, err, res); }
 
 		connection.beginTransaction(function(err) {
-			if (err) return handleErr(connection, err, res);
+			if (err) { return handleErr(connection, err, res); }
 
 			const transUpdateCB = function(type, successCb, err, result2) {
 				if (err) {
@@ -693,7 +693,7 @@ function receiveResults(req, res) {
 											transUpdateCB.bind("latest result", null, err, results);
 											connection.commit(function() {
 												console.log('<- ', prefix + ':' + title, ':', skipCount, failCount,
-													errorCount, commitHash.substr(0, 7));
+													errorCount, commitHash.slice(0, 7));
 
 												if (perfConfig) {
 													// Insert the performance stats, ignoring errors for now
@@ -723,7 +723,7 @@ function receiveResults(req, res) {
 			}
 		});
 	});
-};
+}
 
 const pageListData = [
 	{ url: 'topfails', title: 'Results by title' },
@@ -844,7 +844,7 @@ function statsWebInterface(req, res) {
 			});
 		});
 	});
-};
+}
 
 function makeFailsRow (urlPrefix, row) {
 	return [
@@ -854,7 +854,7 @@ function makeFailsRow (urlPrefix, row) {
 		row.fails,
 		row.skips,
 	];
-};
+}
 
 function failsWebInterface(req, res) {
 	const page = (req.params[0] || 0) - 0;
@@ -870,7 +870,7 @@ function failsWebInterface(req, res) {
 	};
 	pool.query(dbFailsQuery, [ offset ],
 		RH.displayPageList.bind(null, res, data, makeFailsRow));
-};
+}
 
 function resultsWebInterface(req, res) {
 	const prefix = req.params[1] || null;
@@ -899,7 +899,7 @@ function resultsWebInterface(req, res) {
 			res.status(200).send(body);
 		}
 	});
-};
+}
 
 function resultWebCallback(req, res, err, row) {
 	if (err) {
@@ -915,7 +915,7 @@ function resultWebCallback(req, res, err, row) {
 	} else {
 		res.status(200).send('no results for that page at the requested revision');
 	}
-};
+}
 
 function resultWebInterface(req, res) {
 	const commit = req.params[2] ? req.params[0] : null;
@@ -927,7 +927,7 @@ function resultWebInterface(req, res) {
 	} else {
 		pool.query(dbGetOneResult, [ title, prefix ], resultWebCallback.bind(null, req, res));
 	}
-};
+}
 
 function getFailedFetches(req, res) {
 	pool.query(dbFailedFetches, [maxFetchRetries], function(err, rows) {
@@ -957,7 +957,7 @@ function getFailedFetches(req, res) {
 			res.render('list.html', data);
 		}
 	});
-};
+}
 
 function getCrashers(req, res) {
 	const cutoffDate = new Date(Date.now() - (cutOffTime * 1000));
@@ -989,7 +989,7 @@ function getCrashers(req, res) {
 			res.render('list.html', data);
 		}
 	});
-};
+}
 
 function getFailsDistr(req, res) {
 	pool.query(dbFailsDistribution, null, function(err, rows) {
@@ -1011,7 +1011,7 @@ function getFailsDistr(req, res) {
 			res.render('histogram.html', data);
 		}
 	});
-};
+}
 
 function getSkipsDistr(req, res) {
 	pool.query(dbSkipsDistribution, null, function(err, rows) {
@@ -1033,7 +1033,7 @@ function getSkipsDistr(req, res) {
 			res.render('histogram.html', data);
 		}
 	});
-};
+}
 
 function getRegressions(req, res) {
 	const r1 = req.params[0];
@@ -1060,7 +1060,7 @@ function getRegressions(req, res) {
 				RH.displayPageList.bind(null, res, data, RH.makeRegressionRow));
 		}
 	});
-};
+}
 
 function getTopfixes(req, res) {
 	const r1 = req.params[0];
@@ -1086,7 +1086,7 @@ function getTopfixes(req, res) {
 				RH.displayPageList.bind(null, res, data, RH.makeRegressionRow));
 		}
 	});
-};
+}
 
 function getCommits(req, res) {
 	pool.query(dbCommits, null, function(err, rows) {
@@ -1116,7 +1116,7 @@ function getCommits(req, res) {
 			res.render('commits.html', data);
 		}
 	});
-};
+}
 
 function diffResultWebCallback(req, res, flag, err, row) {
 	if (err) {
@@ -1136,7 +1136,7 @@ function diffResultWebCallback(req, res, flag, err, row) {
 		const commit = flag === '+' ? req.params[1] : req.params[0];
 		res.redirect('/result/' + commit + '/' + encodeURIComponent(req.params[2]) + '/' + encodeURIComponent(req.params[3]));
 	}
-};
+}
 
 function resultFlagNewWebInterface(req, res) {
 	const oldCommit = req.params[0];
@@ -1146,7 +1146,7 @@ function resultFlagNewWebInterface(req, res) {
 
 	pool.query(dbGetTwoResults, [ title, prefix, oldCommit, newCommit ],
 		diffResultWebCallback.bind(null, req, res, '+'));
-};
+}
 
 function resultFlagOldWebInterface(req, res) {
 	const oldCommit = req.params[0];
@@ -1156,7 +1156,7 @@ function resultFlagOldWebInterface(req, res) {
 
 	pool.query(dbGetTwoResults, [ title, prefix, oldCommit, newCommit ],
 		diffResultWebCallback.bind(null, req, res, '-'));
-};
+}
 
 const startCoordApp = Promise.method(function() {
 	// Make the coordinator app
