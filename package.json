@@ -20,7 +20,7 @@
 		"yargs": "^13.2.4"
 	},
 	"devDependencies": {
-		"eslint": "7.16.0",
+		"eslint": "^8.31.0",
 		"eslint-config-wikimedia": "^0.25.1"
 	},
 	"scripts": {
