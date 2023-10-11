@@ -4,38 +4,38 @@
 /**
  * A client for testing round-tripping of articles.
  */
-var request = require('request');
-var cluster = require('cluster');
-var exec = require('child_process').exec;
-var Utils = require('../utils/Utils.js').Utils;
-var Promise = require('../utils/promise.js');
+const request = require('request');
+const cluster = require('cluster');
+const exec = require('child_process').exec;
+const Utils = require('../utils/Utils.js').Utils;
+const Promise = require('../utils/promise.js');
 
-var commit;
-var ctime;
-var lastCommit;
-var lastCommitTime;
-var lastCommitCheck;
+let commit;
+let ctime;
+let lastCommit;
+let lastCommitTime;
+let lastCommitCheck;
 
-var config = require(process.argv[2] || './config.js');
+const config = require(process.argv[2] || './config.js');
 
-var pidPrefix = '[' + process.pid + ']: ';
+const pidPrefix = '[' + process.pid + ']: ';
 
-var logger = function(msg) { console.log(pidPrefix + msg); };
+const logger = function(msg) { console.log(pidPrefix + msg); };
 
-var getTitle = function(cb) {
-	var requestOptions = {
+const getTitle = function(cb) {
+	const requestOptions = {
 		uri: 'http://' + config.server.host + ':' +
 			config.server.port + '/title?commit=' + commit + '&ctime=' + encodeURIComponent(ctime),
 		method: 'GET',
 	};
 
-	var callback = function(error, response, body) {
+	const callback = function(error, response, body) {
 		if (error || !response) {
 			setTimeout(function() { cb('start'); }, 15000);
 			return;
 		}
 
-		var resp;
+		let resp;
 		switch (response.statusCode) {
 			case 200:
 				resp = JSON.parse(body);
@@ -66,14 +66,14 @@ var getTitle = function(cb) {
 	Utils.retryingHTTPRequest(10, requestOptions, callback);
 };
 
-var runTest = function(cb, test, retryCount) {
+const runTest = function(cb, test, retryCount) {
 	if (!config.opts.testTimeout) {
 		// Default: 5 minutes.
 		config.opts.testTimeout = 5 * 60 * 1000;
 	}
 	// Add a random (max 500ms) shift in case multiple testreduce
 	// clients fails and they don't all retry in lockstep fashion.
-	var timeoutVal = Math.round(Math.random() * 500) + config.opts.testTimeout;
+	const timeoutVal = Math.round(Math.random() * 500) + config.opts.testTimeout;
 
 	config.runTest(config.opts, test).then(function(results) {
 		cb('postResult', null, results, test, null);
@@ -89,13 +89,13 @@ var runTest = function(cb, test, retryCount) {
 		//    (ex: phantomjs in visualdiffs)
 		// 2. Other transient retry-able error
 		//    (ex: failed uprightdiff, failed postprocessing in visualdiffs)
-		var maxRetries = config.opts.maxRetries || 1;
+		const maxRetries = config.opts.maxRetries || 1;
 		if (retryCount === undefined) {
 			retryCount = 0;
 		}
 		if (retryCount < maxRetries) {
 			console.error(pidPrefix + 'Retry # ' + retryCount);
-			var origCb = cb;
+			const origCb = cb;
 			// Replace cb to prevent a delayed response from
 			// overwriting results from a later retry.
 			// FIXME: Redo this side-effecty crap.
@@ -122,7 +122,7 @@ var runTest = function(cb, test, retryCount) {
 	});
 };
 
-var defaultGitCommitFetch = function(repoPath) {
+const defaultGitCommitFetch = function(repoPath) {
 	return new Promise(function(resolve, reject) {
 		exec('git log --max-count=1 --pretty=format:"%H %ci"', { cwd: repoPath }, function(err, data) {
 			if (err) {
@@ -130,7 +130,7 @@ var defaultGitCommitFetch = function(repoPath) {
 				return;
 			}
 
-			var cobj = data.match(/^([^ ]+) (.*)$/);
+			const cobj = data.match(/^([^ ]+) (.*)$/);
 			if (!cobj) {
 				reject("Error, couldn't find the current commit");
 			} else {
@@ -146,9 +146,9 @@ var defaultGitCommitFetch = function(repoPath) {
  * Returns a fulfillment promise.
  * Checks for updated code every 5 minutes.
  */
-var getGitCommit = function() {
-	var p;
-	var now = Date.now();
+const getGitCommit = function() {
+	let p;
+	const now = Date.now();
 	if (!lastCommitCheck || (now - lastCommitCheck) > (5 * 60 * 1000)) {
 		lastCommitCheck = now;
 		if (config.gitCommitFetch) {
@@ -167,7 +167,7 @@ var getGitCommit = function() {
 	return p;
 };
 
-var postResult = function(err, result, test, finalCB, cb) {
+const postResult = function(err, result, test, finalCB, cb) {
 	getGitCommit().then(function(res) {
 		if (!res[0]) {
 			throw new Error('Could not find the current commit.');
@@ -186,7 +186,7 @@ var postResult = function(err, result, test, finalCB, cb) {
 			}
 		}
 
-		var postOpts = {
+		const postOpts = {
 			uri: 'http://' + config.server.host + ":" + config.server.port + '/result/' + encodeURIComponent(test.title) + '/' + test.prefix,
 			method: 'POST',
 			headers: {
@@ -194,7 +194,7 @@ var postResult = function(err, result, test, finalCB, cb) {
 			},
 		};
 
-		var out = {
+		const out = {
 			results: result,
 			commit: res[0],
 			ctime: res[1],
@@ -226,9 +226,9 @@ var postResult = function(err, result, test, finalCB, cb) {
 	});
 };
 
-var callbackOmnibus = function(which) {
-	var args = Array.prototype.slice.call(arguments);
-	var test;
+const callbackOmnibus = function(which) {
+	const args = Array.prototype.slice.call(arguments);
+	let test;
 	switch (args.shift()) {
 		case 'runTest':
 			test = args[0];
@@ -272,7 +272,7 @@ if (typeof module === 'object') {
 }
 
 if (module && !module.parent) {
-	var getGitCommitCb = function(commitHash, commitTime) {
+	const getGitCommitCb = function(commitHash, commitTime) {
 		lastCommit = commit = commitHash;
 		lastCommitTime = ctime = commitTime;
 		callbackOmnibus('start');
@@ -283,7 +283,7 @@ if (module && !module.parent) {
 	// For node 0.6/0.8: npm install heapdump@0.1.0
 	// For 0.10: npm install heapdump
 	process.on('SIGUSR2', function() {
-		var heapdump = require('heapdump');
+		const heapdump = require('heapdump');
 		console.error('SIGUSR2 received! Writing snapshot.');
 		process.chdir('/tmp');
 		heapdump.writeSnapshot();

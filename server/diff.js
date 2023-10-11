@@ -4,11 +4,11 @@
 */
 
 "use strict";
-var simpleDiff = require('simplediff');
+const simpleDiff = require('simplediff');
 
-var Diff = {};
+const Diff = {};
 
-var diffTokens = function(oldString, newString, tokenize) {
+const diffTokens = function(oldString, newString, tokenize) {
 	if (oldString === newString) {
 		return [['=', [newString]]];
 	} else {
@@ -16,15 +16,15 @@ var diffTokens = function(oldString, newString, tokenize) {
 	}
 };
 
-var diffResults = function(oldString, newString) {
-	var testcaseTokenize = function(resultString) {
-		var testcases = resultString.split(/<\/skipped>|<\/failure>/);
+const diffResults = function(oldString, newString) {
+	const testcaseTokenize = function(resultString) {
+		let testcases = resultString.split(/<\/skipped>|<\/failure>/);
 		// Omit everything that's not part of a <skipped> or <failure> element,
 		// as this can contain info we're not interested in diffing
 		// (eg character number within original text, perfstats).
 		testcases = testcases.slice(0, -1);
 		testcases = testcases.map(function(testcase) {
-			var skipTagIndex = testcase.indexOf('<skipped');
+			const skipTagIndex = testcase.indexOf('<skipped');
 			if (skipTagIndex !== -1) {
 				return testcase.slice(skipTagIndex);
 			} else {
@@ -37,19 +37,19 @@ var diffResults = function(oldString, newString) {
 	return diffTokens(oldString, newString, testcaseTokenize);
 };
 
-var testcaseStatus = function(diff, flag) {
+const testcaseStatus = function(diff, flag) {
 	// Returns an array of 0's and 1's, where, supposing flag is '+', 1 in the nth position
 	// means that the n'th token of the newer diffed item isn't a token of the older item.
 	// (And symmetrically for '-', interchanging roles of 'newer' and 'older'.)
-	var array = [];
-	for (var i = 0, l = diff.length; i < l; i++) {
-		var change = diff[i];
+	const array = [];
+	for (let i = 0, l = diff.length; i < l; i++) {
+		const change = diff[i];
 		if (change[0] === flag) {
-			for (var j = 0; j < change[1].length; j++) {
+			for (let j = 0; j < change[1].length; j++) {
 				array.push(1);
 			}
 		} else if (change[0] === '=') {
-			for (var k = 0; k < change[1].length; k++) {
+			for (let k = 0; k < change[1].length; k++) {
 				array.push(0);
 			}
 		}
@@ -63,29 +63,29 @@ var testcaseStatus = function(diff, flag) {
 Diff.resultFlagged = function(oldString, newString, oldCommit, newCommit, flag) {
 	// If one of the two results is an error, don't flag differences.
 	if (oldString.slice(0, 6) === '<error' || newString.slice(0, 6) === '<error') {
-		var output = flag === '+' ? newString : oldString;
+		const output = flag === '+' ? newString : oldString;
 		return output;
 	}
 
-	var status = flag === '+' ? 'new' : 'old';
-	var xmlWrapper = flag === '+' ? 'FlagNewTestcases' : 'FlagOldTestcases';
-	var testcases = flag === '+' ? newString.split(/(<\/testcase>)/) : oldString.split(/(<\/testcase>)/);
-	var result, pre, post;
+	const status = flag === '+' ? 'new' : 'old';
+	const xmlWrapper = flag === '+' ? 'FlagNewTestcases' : 'FlagOldTestcases';
+	const testcases = flag === '+' ? newString.split(/(<\/testcase>)/) : oldString.split(/(<\/testcase>)/);
+	let result, pre, post;
 
 	if (testcases.length === 1) {
 		// No diffs!
 		result = testcases[0];
 		pre = post = "";
 	} else {
-		var diff = diffResults(oldString, newString);
-		var statusArray = testcaseStatus(diff, flag);
-		var startTestcases = testcases[0].indexOf('<testcase');
+		const diff = diffResults(oldString, newString);
+		const statusArray = testcaseStatus(diff, flag);
+		const startTestcases = testcases[0].indexOf('<testcase');
 		pre = testcases[0].slice(0, startTestcases);
 		post = testcases[testcases.length - 1];
 		testcases[0] = testcases[0].slice(startTestcases);
 
-		var results = [];
-		for (var i = 0, l = testcases.length - 1; i < l; i++) {
+		const results = [];
+		for (let i = 0, l = testcases.length - 1; i < l; i++) {
 			if (i % 2 === 0 && statusArray[i / 2]) {
 				testcases[i] = testcases[i].replace('<testcase', '<testcase status="' + status + '"');
 			}

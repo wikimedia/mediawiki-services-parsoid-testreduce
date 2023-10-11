@@ -1,29 +1,29 @@
 "use strict";
 
-var RH = require('./render.helpers.js').RenderHelpers;
+const RH = require('./render.helpers.js').RenderHelpers;
 
-var dbInsertPerfStatsStart =
+const dbInsertPerfStatsStart =
 	'INSERT INTO perfstats ' +
 	'( page_id, commit_hash, type, value ) VALUES ';
-var dbInsertPerfStatsEnd =
+const dbInsertPerfStatsEnd =
 	' ON DUPLICATE KEY UPDATE value = VALUES( value )';
 
-var dbPerfStatsTypes =
+const dbPerfStatsTypes =
 	'SELECT DISTINCT type FROM perfstats';
 
-var dbLastPerfStatsStart =
+const dbLastPerfStatsStart =
 	'SELECT prefix, title, ';
 
-var dbLastPerfStatsEnd =
+const dbLastPerfStatsEnd =
 	' FROM pages JOIN perfstats ON pages.id = perfstats.page_id ' +
 	'WHERE perfstats.commit_hash = ' +
 		'(SELECT hash FROM commits ORDER BY timestamp DESC LIMIT 1) ' +
 	'GROUP BY pages.id ';
 
-var dbPagePerfStatsStart =
+const dbPagePerfStatsStart =
 	'SELECT commits.hash, commits.timestamp, ';
 
-var dbPagePerfStatsEnd =
+const dbPagePerfStatsEnd =
 	' FROM (perfstats JOIN pages ON perfstats.page_id = pages.id) ' +
 	'JOIN commits ON perfstats.commit_hash = commits.hash ' +
 	'WHERE pages.prefix = ? AND pages.title = ? ' +
@@ -31,9 +31,9 @@ var dbPagePerfStatsEnd =
 	'ORDER BY commits.timestamp DESC ' +
 	'LIMIT 0, ?';
 
-var cachedPerfStatsTypes;
+let cachedPerfStatsTypes;
 
-var perfStatsTypes = function(db, cb) {
+const perfStatsTypes = function(db, cb) {
 	if (cachedPerfStatsTypes) {
 		return cb(null, cachedPerfStatsTypes);
 	}
@@ -45,8 +45,8 @@ var perfStatsTypes = function(db, cb) {
 		} else if (!rows || rows.length === 0) {
 			cb("No performance stats found", null);
 		} else {
-			var types = [];
-			for (var i = 0; i < rows.length; i++) {
+			const types = [];
+			for (let i = 0; i < rows.length; i++) {
 				types.push(rows[i].type);
 			}
 
@@ -59,16 +59,16 @@ var perfStatsTypes = function(db, cb) {
 	});
 };
 
-var parsePerfStats = function(text) {
-	var regexp = /<perfstat[\s]+type="([\w\:]+)"[\s]*>([\d]+)/g;
-	var perfstats = [];
-	for (var match = regexp.exec(text); match !== null; match = regexp.exec(text)) {
+const parsePerfStats = function(text) {
+	const regexp = /<perfstat[\s]+type="([\w\:]+)"[\s]*>([\d]+)/g;
+	const perfstats = [];
+	for (let match = regexp.exec(text); match !== null; match = regexp.exec(text)) {
 		perfstats.push({ type: match[ 1 ], value: match[ 2 ] });
 	}
 	return perfstats;
 };
 
-var insertPerfStats = function(db, pageId, commitHash, perfstats, cb) {
+const insertPerfStats = function(db, pageId, commitHash, perfstats, cb) {
 	// If empty, just return
 	if (!perfstats || perfstats.length === 0) {
 		if (cb) {
@@ -77,8 +77,8 @@ var insertPerfStats = function(db, pageId, commitHash, perfstats, cb) {
 		return;
 	}
 	// Build the query to insert all the results in one go:
-	var dbStmt = dbInsertPerfStatsStart;
-	for (var i = 0; i < perfstats.length; i++) {
+	let dbStmt = dbInsertPerfStatsStart;
+	for (let i = 0; i < perfstats.length; i++) {
 		if (i !== 0) {
 			dbStmt += ", ";
 		}
@@ -102,11 +102,11 @@ function updateTitleData(data, prefix, title) {
 function setupEndpoints(settings, app, mysql, db) {
 	// SSS FIXME: this is awkward
 	RH.settings = settings;
-	var getPerfStats = function(req, res) {
-		var page = (req.params[0] || 0) - 0;
-		var offset = page * 40;
-		var orderBy = 'prefix ASC, title ASC';
-		var urlSuffix = '';
+	const getPerfStats = function(req, res) {
+		const page = (req.params[0] || 0) - 0;
+		const offset = page * 40;
+		let orderBy = 'prefix ASC, title ASC';
+		let urlSuffix = '';
 
 		if (req.query.orderby) {
 			orderBy = mysql.escapeId(req.query.orderby) + ' DESC';
@@ -118,11 +118,11 @@ function setupEndpoints(settings, app, mysql, db) {
 				res.send(err.toString(), 500);
 			} else {
 
-				var makePerfStatRow = function(urlPrefix, row) {
-					var result = [RH.pageTitleData(urlPrefix, row)];
-					for (var j = 0; j < types.length; j++) {
-						var type = types[j];
-						var rowData = row[type] === null ? '' :
+				const makePerfStatRow = function(urlPrefix, row) {
+					const result = [RH.pageTitleData(urlPrefix, row)];
+					for (let j = 0; j < types.length; j++) {
+						const type = types[j];
+						const rowData = row[type] === null ? '' :
 							{ type: type, value: row[type], info: row[type] };
 						result.push(rowData);
 					}
@@ -130,9 +130,9 @@ function setupEndpoints(settings, app, mysql, db) {
 				};
 
 				// Create the query to retrieve the stats per page
-				var perfStatsHeader = ['Title'];
-				var dbStmt = dbLastPerfStatsStart;
-				for (var t = 0; t < types.length; t++) {
+				const perfStatsHeader = ['Title'];
+				let dbStmt = dbLastPerfStatsStart;
+				for (let t = 0; t < types.length; t++) {
 					if (t !== 0) {
 						dbStmt += ", ";
 					}
@@ -147,8 +147,8 @@ function setupEndpoints(settings, app, mysql, db) {
 				dbStmt += 'ORDER BY ' + orderBy;
 				dbStmt += ' LIMIT 40 OFFSET ' + offset.toString();
 
-				var relativeUrlPrefix = (req.params[0] ? '../' : '');
-				var data = {
+				const relativeUrlPrefix = (req.params[0] ? '../' : '');
+				const data = {
 					page: page,
 					relativeUrlPrefix: relativeUrlPrefix,
 					urlPrefix: relativeUrlPrefix + 'perfstats',
@@ -163,19 +163,19 @@ function setupEndpoints(settings, app, mysql, db) {
 		});
 	};
 
-	var getPagePerfStats = function(req, res) {
+	const getPagePerfStats = function(req, res) {
 		if (req.params.length < 2) {
 			res.send("No title given.", 404);
 		}
 
-		var prefix = req.params[0];
-		var title = req.params[1];
+		const prefix = req.params[0];
+		const title = req.params[1];
 
 		perfStatsTypes(db, function(err, types) {
 			if (err) {
 				res.send(err.toString(), 500);
 			} else {
-				var dbStmt = dbPagePerfStatsStart;
+				let dbStmt = dbPagePerfStatsStart;
 				for (var t = 0; t < types.length; t++) {
 					if (t !== 0) {
 						dbStmt += ", ";
@@ -194,16 +194,16 @@ function setupEndpoints(settings, app, mysql, db) {
 						res.send("No performance results found for page.", 200);
 					} else {
 						res.status(200);
-						var tableHeaders = ['Commit'];
+						const tableHeaders = ['Commit'];
 						for (t = 0; t < types.length; t++) {
 							tableHeaders.push(types[t]);
 						}
 
 						// Show the results in order of timestamp.
-						var tableRows = [];
-						for (var r = rows.length - 1; r >= 0; r--) {
-							var row = rows[r];
-							var tableRow = [
+						const tableRows = [];
+						for (let r = rows.length - 1; r >= 0; r--) {
+							const row = rows[r];
+							const tableRow = [
 								{
 									url: '/result/' + row.hash + '/' + prefix + '/' + title,
 									name: row.hash,
@@ -211,14 +211,14 @@ function setupEndpoints(settings, app, mysql, db) {
 								},
 							];
 							for (t = 0; t < types.length; t++) {
-								var rowData = row[types[t]] === null ? '' :
+								const rowData = row[types[t]] === null ? '' :
 									{ type: types[t], value: row[types[t]], info: row[types[t]] };
 								tableRow.push(rowData);
 							}
 							tableRows.push({ tableData: tableRow });
 						}
 
-						var data = {
+						const data = {
 							heading: 'Performance results for ' + prefix + ':' + title,
 							header: tableHeaders,
 							row: tableRows,

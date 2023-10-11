@@ -2,18 +2,18 @@
 (function(exports) {
 	"use strict";
 
-	var numRows, newHash, oldHash;
+	let numRows, newHash, oldHash;
 
-	var setCompareLinks = function() {
+	const setCompareLinks = function() {
 		$('.compare-reg').attr('href', '/regressions/between/' + oldHash + '/' + newHash);
 		$('.compare-fix').attr('href', '/topfixes/between/' + oldHash + '/' + newHash);
 	};
 
-	var button = function(name, index) {
+	const button = function(name, index) {
 		return $('.revisions tr:eq(' + index + ') .buttons input[name="' + name + '"]');
 	};
 
-	var buttonDisplay = function(name, index, visibility) {
+	const buttonDisplay = function(name, index, visibility) {
 		$(button(name, index)).css('visibility', visibility);
 	};
 
@@ -26,7 +26,7 @@
 		button('new', 0).attr('checked', 'checked');
 		button('old', 1).attr('checked', 'checked');
 		buttonDisplay('old', 0, 'hidden');
-		for (var i = 1; i < numRows; i++) {
+		for (let i = 1; i < numRows; i++) {
 			buttonDisplay('new', i, 'hidden');
 		}
 	};
@@ -39,8 +39,8 @@
 			newHash = this.value;
 		}
 		setCompareLinks();
-		var index = $(this).closest('tr').index();
-		for (var i = 0; i < numRows; i++) {
+		const index = $(this).closest('tr').index();
+		for (let i = 0; i < numRows; i++) {
 			if (name === 'old' && i < index) {
 				buttonDisplay('new', i, 'visible');
 			} else if (name === 'old') {

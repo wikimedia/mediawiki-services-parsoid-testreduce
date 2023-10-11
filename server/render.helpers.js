@@ -1,14 +1,14 @@
 "use strict";
 
-var RenderHelpers = {};
-var RH = RenderHelpers;
+const RenderHelpers = {};
+const RH = RenderHelpers;
 
 RenderHelpers.pageTitleData = function(urlPrefix, row) {
-	var settings = RH.settings;
-	var wiki = encodeURIComponent(row.prefix);
-	var title = encodeURIComponent(row.title);
+	const settings = RH.settings;
+	const wiki = encodeURIComponent(row.prefix);
+	const title = encodeURIComponent(row.title);
 
-	var data = {
+	const data = {
 		title: row.prefix + ':' + row.title,
 		latest: urlPrefix + 'latestresult/' + wiki + '/' + title,
 	};
@@ -66,7 +66,7 @@ RenderHelpers.makeRegressionRow = function(urlPrefix, row) {
 };
 
 RenderHelpers.pageStatus = function(row) {
-	var hasStatus = row.hasOwnProperty('skips') &&
+	const hasStatus = row.hasOwnProperty('skips') &&
 		row.hasOwnProperty('fails') &&
 		row.hasOwnProperty('errors');
 
@@ -88,14 +88,14 @@ RenderHelpers.displayPageList = function(res, data, makeRow, err, rows) {
 		res.send(err.toString(), 500);
 	} else {
 		res.status(200);
-		var tableData = data;
+		const tableData = data;
 		if (rows.length === 0) {
 			tableData.header = undefined;
 		} else {
-			var tableRows = [];
-			for (var i = 0; i < rows.length; i++) {
-				var row = rows[i];
-				var tableRow = { status: RH.pageStatus(row), tableData: makeRow(data.relativeUrlPrefix, row) };
+			const tableRows = [];
+			for (let i = 0; i < rows.length; i++) {
+				const row = rows[i];
+				const tableRow = { status: RH.pageStatus(row), tableData: makeRow(data.relativeUrlPrefix, row) };
 				tableRows.push(tableRow);
 			}
 			tableData.paginate = true;

@@ -5,7 +5,7 @@ $(function() {
 	initialCommitList();
 
 	$('.revisions input').on('click', function() {
-		var name = $(this).attr('name');
+		const name = $(this).attr('name');
 		updateCommitList.bind(this, name).call();
 	});
 });

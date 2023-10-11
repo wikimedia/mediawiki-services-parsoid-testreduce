@@ -1,9 +1,9 @@
 "use strict";
 
-var RH = require('./render.helpers.js').RenderHelpers;
-var fs = require('fs');
+const RH = require('./render.helpers.js').RenderHelpers;
+const fs = require('fs');
 
-var dbPagesWithRTSelserErrors =
+const dbPagesWithRTSelserErrors =
 	'SELECT pages.title, pages.prefix, commits.hash, ' +
 	'stats.errors, stats.fails, stats.skips, stats.selser_errors ' +
 	'FROM stats ' +
@@ -14,7 +14,7 @@ var dbPagesWithRTSelserErrors =
 	'ORDER BY stats.score DESC ' +
 	'LIMIT 40 OFFSET ?';
 
-var dbNumOneDiffRegressionsBetweenRevs =
+const dbNumOneDiffRegressionsBetweenRevs =
 	'SELECT count(*) AS numFlaggedRegressions ' +
 	'FROM pages ' +
 	'JOIN stats AS s1 ON s1.page_id = pages.id ' +
@@ -23,7 +23,7 @@ var dbNumOneDiffRegressionsBetweenRevs =
 		'AND s2.fails = 0 AND s2.skips = 0 ' +
 		'AND s1.fails = ? AND s1.skips = ? ';
 
-var dbOneDiffRegressionsBetweenRevs =
+const dbOneDiffRegressionsBetweenRevs =
 	'SELECT pages.title, pages.prefix, ' +
 	's1.commit_hash AS new_commit, ' +
 	's2.commit_hash AS old_commit ' +
@@ -36,7 +36,7 @@ var dbOneDiffRegressionsBetweenRevs =
 	'ORDER BY s1.score - s2.score DESC ' +
 	'LIMIT 40 OFFSET ?';
 
-var dbNumNewFailsRegressionsBetweenRevs =
+const dbNumNewFailsRegressionsBetweenRevs =
 	'SELECT count(*) AS numFlaggedRegressions ' +
 	'FROM pages ' +
 	'JOIN stats AS s1 ON s1.page_id = pages.id ' +
@@ -46,7 +46,7 @@ var dbNumNewFailsRegressionsBetweenRevs =
 		// exclude cases introducing exactly one skip/fail to a perfect
 		'AND (s1.skips > 0 OR s1.fails <> 1 OR s2.skips > 0)';
 
-var dbNewFailsRegressionsBetweenRevs =
+const dbNewFailsRegressionsBetweenRevs =
 	'SELECT pages.title, pages.prefix, ' +
 	's1.commit_hash AS new_commit, s1.errors AS errors, s1.fails AS fails, s1.skips AS skips, ' +
 	's2.commit_hash AS old_commit, s2.errors AS old_errors, s2.fails AS old_fails, s2.skips AS old_skips ' +
@@ -60,7 +60,7 @@ var dbNewFailsRegressionsBetweenRevs =
 	'ORDER BY s1.score - s2.score DESC ' +
 	'LIMIT 40 OFFSET ?';
 
-var makeOneDiffRegressionRow = function(urlPrefix, row) {
+const makeOneDiffRegressionRow = function(urlPrefix, row) {
 	return [
 		RH.pageTitleData(urlPrefix, row),
 		RH.oldCommitLinkData(urlPrefix, row.old_commit, row.new_commit, row.title, row.prefix),
@@ -69,10 +69,10 @@ var makeOneDiffRegressionRow = function(urlPrefix, row) {
 };
 
 function parseSelserStats(result) {
-	var selserErrorCount = 0;
-	var selserSuites = result.match(/<testsuite[^>]*\(selser\)[^>]*>[\s\S]*?<\/testsuite>/g);
-	for (var selserSuite in selserSuites) {
-		var matches = selserSuites[selserSuite].match(/<testcase/g);
+	let selserErrorCount = 0;
+	const selserSuites = result.match(/<testsuite[^>]*\(selser\)[^>]*>[\s\S]*?<\/testsuite>/g);
+	for (const selserSuite in selserSuites) {
+		const matches = selserSuites[selserSuite].match(/<testcase/g);
 		selserErrorCount += matches ? matches.length : 0;
 	}
 
@@ -108,17 +108,17 @@ function updateIndexData(data, row) {
 function setupEndpoints(settings, app, mysql, db, hbs) {
 	// SSS FIXME: this is awkward
 	RH.settings = settings;
-	var displayOneDiffRegressions = function(numFails, numSkips, subheading, headingLinkData, req, res) {
-		var r1 = req.params[0];
-		var r2 = req.params[1];
-		var page = (req.params[2] || 0) - 0;
-		var offset = page * 40;
-		var relativeUrlPrefix = '../../../';
+	const displayOneDiffRegressions = function(numFails, numSkips, subheading, headingLinkData, req, res) {
+		const r1 = req.params[0];
+		const r2 = req.params[1];
+		const page = (req.params[2] || 0) - 0;
+		const offset = page * 40;
+		const relativeUrlPrefix = '../../../';
 		db.query(dbNumOneDiffRegressionsBetweenRevs, [r2, r1, numFails, numSkips], function(err, row) {
 			if (err) {
 				res.send(err.toString(), 500);
 			} else {
-				var headingLink = [
+				const headingLink = [
 					{
 						name: headingLinkData[2],
 						info: headingLinkData[1],
@@ -130,7 +130,7 @@ function setupEndpoints(settings, app, mysql, db, hbs) {
 						url: relativeUrlPrefix + 'newfailsregressions/between/' + r1 + '/' + r2,
 					},
 				];
-				var data = {
+				const data = {
 					page: page,
 					relativeUrlPrefix: relativeUrlPrefix,
 					urlPrefix: relativeUrlPrefix + headingLinkData[0] + 'regressions/between/' + r1 + '/' + r2,
@@ -147,12 +147,12 @@ function setupEndpoints(settings, app, mysql, db, hbs) {
 		});
 	};
 
-	var getRtselsererrors = function(req, res) {
-		var commit = req.params[0];
-		var page = (req.params[1] || 0) - 0;
-		var offset = page * 40;
-		var relativeUrlPrefix = (req.params[1] ? '../../' : '../');
-		var data = {
+	const getRtselsererrors = function(req, res) {
+		const commit = req.params[0];
+		const page = (req.params[1] || 0) - 0;
+		const offset = page * 40;
+		const relativeUrlPrefix = (req.params[1] ? '../../' : '../');
+		const data = {
 			page: page,
 			relativeUrlPrefix: relativeUrlPrefix,
 			urlPrefix: relativeUrlPrefix + 'rtselsererrors/' + commit,
@@ -160,11 +160,11 @@ function setupEndpoints(settings, app, mysql, db, hbs) {
 			heading: 'Pages with rt selser errors',
 			header: ['Title', 'Commit', 'Syntactic diffs', 'Semantic diffs', 'Errors'],
 		};
-		var makeSelserErrorRow = function(urlPrefix, row) {
-			var prefix = encodeURIComponent(row.prefix);
-			var title = encodeURIComponent(row.title);
+		const makeSelserErrorRow = function(urlPrefix, row) {
+			const prefix = encodeURIComponent(row.prefix);
+			const title = encodeURIComponent(row.title);
 
-			var rowData = {
+			const rowData = {
 				title: row.prefix + ':' + row.title,
 				latest: 'latestresult/' + prefix + '/' + title,
 				perf: 'pageperfstats/' + prefix + '/' + title,
@@ -189,27 +189,27 @@ function setupEndpoints(settings, app, mysql, db, hbs) {
 			RH.displayPageList.bind(null, res, data, makeSelserErrorRow));
 	};
 
-	var getOneFailRegressions = displayOneDiffRegressions.bind(
+	const getOneFailRegressions = displayOneDiffRegressions.bind(
 		null, 1, 0, 'Old Commit: perfect | New Commit: one semantic diff',
 		['onefail', 'one new syntactic diff, previously perfect', 'one skip regressions', 'oneskip']
 	);
 
-	var getOneSkipRegressions = displayOneDiffRegressions.bind(
+	const getOneSkipRegressions = displayOneDiffRegressions.bind(
 		null, 0, 1, 'Old Commit: perfect | New Commit: one syntactic diff',
 		['oneskip', 'one new semantic diff, previously perfect', 'one fail regressions', 'onefail']
 	);
 
-	var getNewFailsRegressions = function(req, res) {
-		var r1 = req.params[0];
-		var r2 = req.params[1];
-		var page = (req.params[2] || 0) - 0;
-		var offset = page * 40;
-		var relativeUrlPrefix = '../../../';
+	const getNewFailsRegressions = function(req, res) {
+		const r1 = req.params[0];
+		const r2 = req.params[1];
+		const page = (req.params[2] || 0) - 0;
+		const offset = page * 40;
+		const relativeUrlPrefix = '../../../';
 		db.query(dbNumNewFailsRegressionsBetweenRevs, [r2, r1], function(err, row) {
 			if (err) {
 				res.send(err.toString(), 500);
 			} else {
-				var data = {
+				const data = {
 					page: page,
 					relativeUrlPrefix: relativeUrlPrefix,
 					urlPrefix: relativeUrlPrefix + 'regressions/between/' + r1 + '/' + r2,

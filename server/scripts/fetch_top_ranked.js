@@ -22,7 +22,7 @@ function processRes(fetchArgs, out, err, resp, body) {
 	const res = JSON.parse(body);
 	const articles = res.items[0].articles;
 	const n = fetchArgs.count < articles.length ? fetchArgs.count : articles.length;
-	for (var i = 0; i < n; i++) {
+	for (let i = 0; i < n; i++) {
 		titles.push(articles[i].article);
 	}
 

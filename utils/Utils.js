@@ -1,13 +1,13 @@
 'use strict';
 
-var request = require('request');
-var Promise = require('../utils/promise.js');
+const request = require('request');
+const Promise = require('../utils/promise.js');
 
 /**
  * @class
  * @singleton
  */
-var Utils = {};
+const Utils = {};
 
 /**
  * Perform a HTTP request using the 'request' package, and retry on failures
@@ -22,8 +22,8 @@ var Utils = {};
  * @param {Object} cb.body
  */
 Utils.retryingHTTPRequest = function(retries, requestOptions, cb) {
-	var delay = 100;  // start with 100ms
-	var errHandler = function(error, response, body) {
+	let delay = 100;  // start with 100ms
+	const errHandler = function(error, response, body) {
 		if (error) {
 			if (retries--) {
 				console.error('HTTP ' + requestOptions.method + ' to \n' +
@@ -98,16 +98,16 @@ Utils.retryingHTTPRequest = function(retries, requestOptions, cb) {
 //   legacyRequest(options, function(err, body, response) { ... });
 //
 Utils.mkPromised = function(callback, names) {
-	var res, rej;
-	var p = new Promise(function(_res, _rej) { res = _res; rej = _rej; });
-	var f = function(e, v) {
+	let res, rej;
+	const p = new Promise(function(_res, _rej) { res = _res; rej = _rej; });
+	const f = function(e, v) {
 		if (e) {
 			rej(e);
 		} else if (names === true) {
 			res(Array.prototype.slice.call(arguments, 1));
 		} else if (names) {
-			var value = {};
-			for (var index in names) {
+			const value = {};
+			for (const index in names) {
 				value[names[index]] = arguments[(+index) + 1];
 			}
 			res(value);

@@ -5,10 +5,10 @@
  * A utility for reading in a JSON-y list of articles to the database.
  */
 
-var yargs = require('yargs');
+const yargs = require('yargs');
 
 // Default options
-var defaults = {
+const defaults = {
 	'host':     'localhost',
 	'port':     3306,
 	'database': 'testreduce',
@@ -17,7 +17,7 @@ var defaults = {
 };
 
 // Settings file
-var settings;
+let settings;
 try {
 	settings = require('./server.settings.js');
 } catch (e) {
@@ -25,7 +25,7 @@ try {
 }
 
 // Command line options
-var opts = yargs.usage('Usage: ./importJson.js titles.example.json')
+const opts = yargs.usage('Usage: ./importJson.js titles.example.json')
 	.options('help', {
 		description: 'Show this message',
 		'boolean': true,
@@ -57,14 +57,14 @@ var opts = yargs.usage('Usage: ./importJson.js titles.example.json')
 		describe: 'Password.',
 	})
 	.demand(1);
-var argv = opts.argv;
+const argv = opts.argv;
 
 if (argv.help) {
 	opts.showHelp();
 	process.exit(0);
 }
 
-var getOption = function(opt) {
+const getOption = function(opt) {
 	// Check possible options in this order: command line, settings file, defaults.
 	if (argv.hasOwnProperty(opt)) {
 		return argv[ opt ];
@@ -77,8 +77,8 @@ var getOption = function(opt) {
 	}
 };
 
-var mysql = require('mysql2');
-var db = mysql.createConnection({
+const mysql = require('mysql2');
+const db = mysql.createConnection({
 	host:               getOption('host'),
 	port:               getOption('port'),
 	database:           getOption('database'),
@@ -88,11 +88,11 @@ var db = mysql.createConnection({
 	multipleStatements: true,
 });
 
-var waitingCount = 0.5;
+let waitingCount = 0.5;
 
-var dbInsert = 'INSERT IGNORE INTO pages ( title, prefix ) VALUES ( ?, ? )';
+const dbInsert = 'INSERT IGNORE INTO pages ( title, prefix ) VALUES ( ?, ? )';
 
-var insertRecord = function(record, prefix) {
+const insertRecord = function(record, prefix) {
 	waitingCount++;
 	db.query(dbInsert, [ record, prefix ], function(err) {
 		if (err) {
@@ -107,12 +107,12 @@ var insertRecord = function(record, prefix) {
 	});
 };
 
-var loadJSON = function(json, options) {
-	var titles = require(json);
+const loadJSON = function(json, options) {
+	const titles = require(json);
 
 	db.query('START TRANSACTION;');
 
-	for (var i = 0; i < titles.length; i++) {
+	for (let i = 0; i < titles.length; i++) {
 		insertRecord(titles[i], options.prefix || 'enwiki');
 	}
 
@@ -125,7 +125,7 @@ var loadJSON = function(json, options) {
 };
 
 db.connect(function(err) {
-	var filepath;
+	let filepath;
 	if (err) {
 		console.error(err);
 	} else {

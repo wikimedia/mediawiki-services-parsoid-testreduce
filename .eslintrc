@@ -54,7 +54,8 @@
 		"prefer-template": "off",
 
 		"no-tabs": "off",
-		"no-var": "off",
+		"no-var": "warn",
+		"prefer-const": "warn",
 		"no-console": "off",
 		"no-control-regex": "off",
 		"no-useless-concat": "off",
