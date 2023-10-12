@@ -448,8 +448,8 @@ function fetchCB(msg, failCb, successCb, err, result) {
 function fetchPages(commitHash, cutOffTimestamp, cb, res) {
 	pool.getConnection(function (err, connection) {
 		if (err) { return handleErr(connection, err, res); }
-		connection.beginTransaction(function(err) {
-			if (err) { return handleErr(connection, err, res); }
+		connection.beginTransaction(function(err2) {
+			if (err2) { return handleErr(connection, err2, res); }
 
 			connection.query(dbGetTitle, [maxFetchRetries, commitHash, maxTries, cutOffTimestamp, batchSize], fetchCB.bind(null, 'Error getting next titles', cb, function(rows) {
 				if (!rows || rows.length === 0) {
@@ -503,14 +503,14 @@ function getTitle(req, res) {
 		pool.getConnection(function (err, connection) {
 			if (err) { return handleErr(connection, err, res); }
 
-			connection.beginTransaction(function(err) {
-				if (err) { return handleErr(connection, err, res); }
+			connection.beginTransaction(function(err2) {
+				if (err2) { return handleErr(connection, err2, res); }
 
 				if (!knownCommits) {
 					knownCommits = {};
-					connection.query(dbCommitHashes, null, function(err, resCommitHashes) {
-						if (err) {
-							console.log('Error fetching known commits', err);
+					connection.query(dbCommitHashes, null, function(err3, resCommitHashes) {
+						if (err3) {
+							console.log('Error fetching known commits', err3);
 						} else {
 							resCommitHashes.forEach(function(v) {
 								knownCommits[v.hash] = commitDate;
@@ -521,8 +521,8 @@ function getTitle(req, res) {
 
 				// New commit, record it
 				knownCommits[ commitHash ] = commitDate;
-				connection.query(dbInsertCommit, [ commitHash, new Date() ], function(err, commitInsertResult) {
-					if (err) {
+				connection.query(dbInsertCommit, [ commitHash, new Date() ], function(err4, commitInsertResult) {
+					if (err4) {
 						console.error("Error inserting commit " + commitHash);
 					} else if (commitInsertResult.affectedRows > 0) {
 						// If this is a new commit, we need to clear the number of times a
@@ -638,15 +638,15 @@ function receiveResults(req, res) {
 	pool.getConnection(function (err, connection) {
 		if (err) { return handleErr(connection, err, res); }
 
-		connection.beginTransaction(function(err) {
-			if (err) { return handleErr(connection, err, res); }
+		connection.beginTransaction(function(err2) {
+			if (err2) { return handleErr(connection, err2, res); }
 
-			const transUpdateCB = function(type, successCb, err, result2) {
-				if (err) {
+			const transUpdateCB = function(type, successCb, err3, result2) {
+				if (err3) {
 					connection.rollback();
 					const msg = "Error inserting/updating " + type + " for page: " +  prefix + ':' + title + " and hash: " + commitHash;
 					console.error(msg);
-					console.error(err);
+					console.error(err3);
 					if (res) {
 						res.status(500).send(msg);
 					}
@@ -660,11 +660,11 @@ function receiveResults(req, res) {
 				// Page fetch error, increment the fetch error count so, when it goes
 				// over maxFetchRetries, it won't be considered for tests again.
 				console.log('XX', prefix + ':' + title);
-				connection.query(dbIncrementFetchErrorCount, [commitHash, title, prefix], function(err, results) {
-					transUpdateCB("page fetch error count", null, err, results);
-					connection.commit(function(err) {
-						if (err) {
-							console.error("Error incrementing fetch count: " + err.toString());
+				connection.query(dbIncrementFetchErrorCount, [commitHash, title, prefix], function(err8, results) {
+					transUpdateCB("page fetch error count", null, err8, results);
+					connection.commit(function(err4) {
+						if (err4) {
+							console.error("Error incrementing fetch count: " + err4.toString());
 						}
 						res.status(200).send('');
 					});
@@ -672,8 +672,8 @@ function receiveResults(req, res) {
 				});
 
 			} else {
-				connection.query(dbFindPage, [ title, prefix ], function(err, pages) {
-					if (!err && pages.length === 1) {
+				connection.query(dbFindPage, [ title, prefix ], function(err5, pages) {
+					if (!err5 && pages.length === 1) {
 						// Found the correct page, fill the details up
 						const page = pages[0];
 						const score = statsScore(skipCount, failCount, errorCount);
@@ -689,8 +689,8 @@ function receiveResults(req, res) {
 										latestStatId = insertedStat.insertId;
 
 										// And now update the page with the latest info
-										connection.query(dbUpdatePageLatestResults, [ latestStatId, score, latestResultId, commitHash, page.id ], function(err, results) {
-											transUpdateCB.bind("latest result", null, err, results);
+										connection.query(dbUpdatePageLatestResults, [ latestStatId, score, latestResultId, commitHash, page.id ], function(err6, results) {
+											transUpdateCB.bind("latest result", null, err6, results);
 											connection.commit(function() {
 												console.log('<- ', prefix + ':' + title, ':', skipCount, failCount,
 													errorCount, commitHash.slice(0, 7));
@@ -708,10 +708,10 @@ function receiveResults(req, res) {
 									}));
 							}));
 					} else {
-						connection.rollback(function() {
-							if (err) {
+						connection.rollback(function(err7) {
+							if (err7) {
 								console.log('XX', prefix + ':' + title + "; ERR: " + err);
-								res.status(500).send(err.toString());
+								res.status(500).send(err7.toString());
 							} else {
 								console.log('XX', prefix + ':' + title + "; found non-unique pages. count: " + pages.length);
 								res.status(200).send("Did not find claim for title: " + prefix + ':' + title);
@@ -750,9 +750,9 @@ function statsWebInterface(req, res) {
 		if (err) { return handleErr(null, err, res); }
 
 		const latestHash = row[0].hash;
-		pool.query(dbPreviousHash, [], function(err, row) {
-			if (err) { return handleErr(null, err, res); }
-			const previousHash = row.length > 0 ? row[0].hash : 'null';
+		pool.query(dbPreviousHash, [], function(err2, row2) {
+			if (err2) { return handleErr(null, err2, res); }
+			const previousHash = row2.length > 0 ? row2[0].hash : 'null';
 
 			// Switch the query object based on the prefix
 			if (prefix !== null) {
@@ -775,20 +775,20 @@ function statsWebInterface(req, res) {
 			}
 
 			// Fetch stats for commit
-			pool.query(query, queryParams, function(err, row) {
-				if (err) { return handleErr(null, err, res); }
+			pool.query(query, queryParams, function(err3, row3) {
+				if (err3) { return handleErr(null, err3, res); }
 
 				res.status(200);
 
-				const tests = row[0].total;
-				const errorLess = row[0].no_errors;
-				const skipLess = row[0].no_skips;
-				const numRegressions = row[0].numregressions;
-				const numFixes = row[0].numfixes;
+				const tests = row3[0].total;
+				const errorLess = row3[0].no_errors;
+				const skipLess = row3[0].no_skips;
+				const numRegressions = row3[0].numregressions;
+				const numFixes = row3[0].numfixes;
 				const noErrors = Math.round(100 * 100 * errorLess / (tests || 1)) / 100;
 				const perfects = Math.round(100 * 100 * skipLess / (tests || 1)) / 100;
 				const syntacticDiffs = Math.round(100 * 100 *
-					(row[0].no_fails / (tests || 1))) / 100;
+					(row3[0].no_fails / (tests || 1))) / 100;
 				const width = 800;
 				const data = {
 					prefix: prefix,
@@ -806,37 +806,37 @@ function statsWebInterface(req, res) {
 					latestRevision: [
 						{
 							description: 'Git SHA1',
-							value: row[0].maxhash,
+							value: row3[0].maxhash,
 						},
 						{
 							description: 'Test Results',
-							value: row[0].maxresults,
+							value: row3[0].maxresults,
 						},
 						{
 							description: 'Crashers',
-							value: row[0].crashers,
+							value: row3[0].crashers,
 							url: 'crashers',
 						},
 						{
 							description: 'Fixes',
 							value: numFixes,
-							url: 'topfixes/between/' + row[0].secondhash + '/' + row[0].maxhash,
+							url: 'topfixes/between/' + row3[0].secondhash + '/' + row3[0].maxhash,
 						},
 						{
 							description: 'Regressions',
 							value: numRegressions,
-							url: 'regressions/between/' + row[0].secondhash + '/' + row[0].maxhash,
+							url: 'regressions/between/' + row3[0].secondhash + '/' + row3[0].maxhash,
 						},
 					],
 					pages: pageListData,
 				};
 
 				if (perfConfig) {
-					perfConfig.updateIndexData(data, row);
+					perfConfig.updateIndexData(data, row3);
 				}
 
 				if (parsoidRTConfig) {
-					parsoidRTConfig.updateIndexData(data, row);
+					parsoidRTConfig.updateIndexData(data, row3);
 					data.parsoidRT = true;
 				}
 
@@ -846,7 +846,7 @@ function statsWebInterface(req, res) {
 	});
 }
 
-function makeFailsRow (urlPrefix, row) {
+function makeFailsRow(urlPrefix, row) {
 	return [
 		RH.pageTitleData(urlPrefix, row),
 		RH.commitLinkData(urlPrefix, row.hash, row.title, row.prefix),
@@ -1040,8 +1040,7 @@ function getRegressions(req, res) {
 	const r2 = req.params[1];
 	const page = (req.params[2] || 0) - 0;
 	const offset = page * 40;
-	const relativeUrlPrefix = '../../../';
-	relativeUrlPrefix = relativeUrlPrefix + (req.params[0] ? '../' : '');
+	const relativeUrlPrefix = '../../../' + (req.params[0] ? '../' : '');
 	pool.query(dbNumRegressionsBetweenRevs, [ r2, r1 ], function(err, row) {
 		if (err) {
 			res.status(500).send(err.toString());
@@ -1067,8 +1066,7 @@ function getTopfixes(req, res) {
 	const r2 = req.params[1];
 	const page = (req.params[2] || 0) - 0;
 	const offset = page * 40;
-	const relativeUrlPrefix = '../../../';
-	relativeUrlPrefix = relativeUrlPrefix + (req.params[0] ? '../' : '');
+	const relativeUrlPrefix = '../../../' + (req.params[0] ? '../' : '');
 	pool.query(dbNumFixesBetweenRevs, [ r2, r1 ], function(err, row) {
 		if (err) {
 			res.status(500).send(err.toString());

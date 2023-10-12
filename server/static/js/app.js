@@ -1,7 +1,7 @@
 /* global initialCommitList, updateCommitList, $:false */
-$(function() {
-	"use strict";
+'use strict';
 
+$(function() {
 	initialCommitList();
 
 	$('.revisions input').on('click', function() {

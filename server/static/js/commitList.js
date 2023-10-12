@@ -1,7 +1,7 @@
 /* global $:false */
-(function(exports) {
-	"use strict";
+'use strict';
 
+(function(exports) {
 	let numRows, newHash, oldHash;
 
 	const setCompareLinks = function() {

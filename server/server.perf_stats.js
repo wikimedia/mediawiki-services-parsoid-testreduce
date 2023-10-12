@@ -176,7 +176,7 @@ function setupEndpoints(settings, app, mysql, db) {
 				res.send(err.toString(), 500);
 			} else {
 				let dbStmt = dbPagePerfStatsStart;
-				for (var t = 0; t < types.length; t++) {
+				for (let t = 0; t < types.length; t++) {
 					if (t !== 0) {
 						dbStmt += ", ";
 					}
@@ -195,7 +195,7 @@ function setupEndpoints(settings, app, mysql, db) {
 					} else {
 						res.status(200);
 						const tableHeaders = ['Commit'];
-						for (t = 0; t < types.length; t++) {
+						for (let t = 0; t < types.length; t++) {
 							tableHeaders.push(types[t]);
 						}
 
@@ -210,7 +210,7 @@ function setupEndpoints(settings, app, mysql, db) {
 									info: row.timestamp.toString(),
 								},
 							];
-							for (t = 0; t < types.length; t++) {
+							for (let t = 0; t < types.length; t++) {
 								const rowData = row[types[t]] === null ? '' :
 									{ type: types[t], value: row[types[t]], info: row[types[t]] };
 								tableRow.push(rowData);
