@@ -19,6 +19,7 @@ const defaults = {
 // Settings file
 let settings;
 try {
+	// eslint-disable-next-line n/no-missing-require
 	settings = require('./server.settings.js');
 } catch (e) {
 	settings = {};

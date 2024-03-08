@@ -10,6 +10,10 @@
 			"flatTernaryExpressions": true
 		}],
 		"one-var": ["error", { "initialized": "never" }],
+		"n/no-process-exit": "off",
+        "security/detect-unsafe-regex": "off",
+        "security/detect-non-literal-require": "off",
+        "security/detect-non-literal-fs-filename": "off",
 
 		// These are a sign that you're writing a different version of Node than we might be running
 		"no-restricted-syntax": "off",

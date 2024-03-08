@@ -29,7 +29,9 @@ Utils.retryingHTTPRequest = function(retries, requestOptions, cb) {
 				console.error('HTTP ' + requestOptions.method + ' to \n' +
 						(requestOptions.uri || requestOptions.url) + ' failed: ' + error +
 						'\nRetrying in ' + (delay / 1000) + ' seconds.');
-				setTimeout(function() { request(requestOptions, errHandler); }, delay);
+				setTimeout(function() {
+					request(requestOptions, errHandler);
+				}, delay);
 				// exponential back-off
 				delay = delay * 2;
 				return;
@@ -99,7 +101,9 @@ Utils.retryingHTTPRequest = function(retries, requestOptions, cb) {
 //
 Utils.mkPromised = function(callback, names) {
 	let res, rej;
-	const p = new Promise(function(_res, _rej) { res = _res; rej = _rej; });
+	const p = new Promise(function(_res, _rej) {
+		res = _res; rej = _rej;
+	});
 	const f = function(e, v) {
 		if (e) {
 			rej(e);

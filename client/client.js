@@ -20,7 +20,9 @@ const config = require(process.argv[2] || './config.js');
 
 const pidPrefix = '[' + process.pid + ']: ';
 
-const logger = function(msg) { console.log(pidPrefix + msg); };
+const logger = function(msg) {
+	console.log(pidPrefix + msg);
+};
 
 const getTitle = function(cb) {
 	const requestOptions = {
@@ -31,7 +33,9 @@ const getTitle = function(cb) {
 
 	const callback = function(error, response, body) {
 		if (error || !response) {
-			setTimeout(function() { cb('start'); }, 15000);
+			setTimeout(function() {
+				cb('start');
+			}, 15000);
 			return;
 		}
 
@@ -43,7 +47,9 @@ const getTitle = function(cb) {
 				break;
 			case 404:
 				logger('The server does not have any work for us right now, waiting half a minute....');
-				setTimeout(function() { cb('start'); }, 30000);
+				setTimeout(function() {
+					cb('start');
+				}, 30000);
 				break;
 			case 426:
 				logger('Update required, exiting.');
@@ -59,7 +65,9 @@ const getTitle = function(cb) {
 				break;
 			default:
 				logger('There was some error (' + response.statusCode + '), but that is fine. Waiting 15 seconds to resume....');
-				setTimeout(function() { cb('start'); }, 15000);
+				setTimeout(function() {
+					cb('start');
+				}, 15000);
 		}
 	};
 
@@ -118,7 +126,9 @@ const runTest = function(cb, test, retryCount) {
 		 * In sum, easier to die than to worry about having to reset any
 		 * broken application state.
 		 */
-		cb('postResult', err, null, test,  function() { process.exit(1); });
+		cb('postResult', err, null, test,  function() {
+			process.exit(1);
+		});
 	});
 };
 

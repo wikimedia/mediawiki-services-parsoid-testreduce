@@ -58,7 +58,9 @@ function fetchAll(fetchArgs, out) {
 
 // +0.02 is so we fetch a few extra titles to account for the title overlap
 // between the list of randomly generated titles and recently edited titles.
-const sum = wikis.reduce(function(s, w) { return s + w.limit; }, 0);
+const sum = wikis.reduce(function(s, w) {
+	return s + w.limit;
+}, 0);
 const fraction = ((1 - (testdb.popular_pages_percentage + testdb.dump_percentage) / 100) + 0.02);
 wikis.forEach(function(obj) {
 	const isTalk = obj.ns === 1;

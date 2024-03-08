@@ -447,9 +447,13 @@ function fetchCB(msg, failCb, successCb, err, result) {
 
 function fetchPages(commitHash, cutOffTimestamp, cb, res) {
 	pool.getConnection(function (err, connection) {
-		if (err) { return handleErr(connection, err, res); }
+		if (err) {
+			return handleErr(connection, err, res);
+		}
 		connection.beginTransaction(function(err2) {
-			if (err2) { return handleErr(connection, err2, res); }
+			if (err2) {
+				return handleErr(connection, err2, res);
+			}
 
 			connection.query(dbGetTitle, [maxFetchRetries, commitHash, maxTries, cutOffTimestamp, batchSize], fetchCB.bind(null, 'Error getting next titles', cb, function(rows) {
 				if (!rows || rows.length === 0) {
@@ -482,7 +486,9 @@ let lastFetchedDate = new Date(0);
 let knownCommits;
 
 function handleErr(connection, err, res) {
-	if (connection) { connection.release(); }
+	if (connection) {
+		connection.release();
+	}
 	console.log(err);
 	res.status(500).send(err.toString());
 }
@@ -501,10 +507,14 @@ function getTitle(req, res) {
 	// we've done this
 	if (!knownCommit) {
 		pool.getConnection(function (err, connection) {
-			if (err) { return handleErr(connection, err, res); }
+			if (err) {
+				return handleErr(connection, err, res);
+			}
 
 			connection.beginTransaction(function(err2) {
-				if (err2) { return handleErr(connection, err2, res); }
+				if (err2) {
+					return handleErr(connection, err2, res);
+				}
 
 				if (!knownCommits) {
 					knownCommits = {};
@@ -636,10 +646,14 @@ function receiveResults(req, res) {
 	res.setHeader('Content-Type', 'text/plain; charset=UTF-8');
 
 	pool.getConnection(function (err, connection) {
-		if (err) { return handleErr(connection, err, res); }
+		if (err) {
+			return handleErr(connection, err, res);
+		}
 
 		connection.beginTransaction(function(err2) {
-			if (err2) { return handleErr(connection, err2, res); }
+			if (err2) {
+				return handleErr(connection, err2, res);
+			}
 
 			const transUpdateCB = function(type, successCb, err3, result2) {
 				if (err3) {
@@ -747,11 +761,15 @@ function statsWebInterface(req, res) {
 	let query, queryParams;
 
 	pool.query(dbLatestHash, [], function(err, row) {
-		if (err) { return handleErr(null, err, res); }
+		if (err) {
+			return handleErr(null, err, res);
+		}
 
 		const latestHash = row[0].hash;
 		pool.query(dbPreviousHash, [], function(err2, row2) {
-			if (err2) { return handleErr(null, err2, res); }
+			if (err2) {
+				return handleErr(null, err2, res);
+			}
 			const previousHash = row2.length > 0 ? row2[0].hash : 'null';
 
 			// Switch the query object based on the prefix
@@ -776,7 +794,9 @@ function statsWebInterface(req, res) {
 
 			// Fetch stats for commit
 			pool.query(query, queryParams, function(err3, row3) {
-				if (err3) { return handleErr(null, err3, res); }
+				if (err3) {
+					return handleErr(null, err3, res);
+				}
 
 				res.status(200);
 

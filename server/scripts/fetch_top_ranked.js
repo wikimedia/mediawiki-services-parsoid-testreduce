@@ -40,7 +40,9 @@ function fetchAll(fetchArgs, out) {
 
 // +0.01 is so we fetch a few extra titles to account for the title overlap
 // between the different lists
-const sum = wikis.reduce(function(s, w) { return s + w.limit; }, 0);
+const sum = wikis.reduce(function(s, w) {
+	return s + w.limit;
+}, 0);
 const fraction = testdb.popular_pages_percentage / 100 + 0.01;
 wikis.forEach(function(obj) {
 	const isTalk = obj.ns === 1;
@@ -63,13 +65,13 @@ wikis.forEach(function(obj) {
 	}
 
 	if (month < 10) {
-		month = `0${month}`;
+		month = `0${ month }`;
 	}
 	console.log('Processing: ' + prefix + "; fetching: " + count + " items!");
 	const fetchArgs = {
 		prefix: prefix,
 		count: count,
-		uri: `https://wikimedia.org/api/rest_v1/metrics/pageviews/top/${domain}/all-access/${year}/${month}/all-days`
+		uri: `https://wikimedia.org/api/rest_v1/metrics/pageviews/top/${ domain }/all-access/${ year }/${ month }/all-days`
 	};
 	fetchAll(fetchArgs, []);
 });
