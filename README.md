@@ -1,7 +1,7 @@
 Testreduce
 ==========
 
-This codebase has been extracted from [Mediawiki Parsoid](http://www.mediawiki.org/wiki/Parsoid)
+This codebase has been extracted from [MediaWiki Parsoid](http://www.mediawiki.org/wiki/Parsoid)
 repository. In the current form, this codebase still has some
 hardcoded references and uses to the Parsoid usecase which involves
 mass roundtrip (wikitext -> html -> wikitext) testing of wikipages
