@@ -2,7 +2,6 @@
 	"root": true,
 	"extends": "wikimedia/server",
 	"rules": {
-		// These are somewhat agreed upon explicit divergences.
 		"indent": ["error", "tab", {
 			"SwitchCase": 1,
 			"MemberExpression": "off",
@@ -15,7 +14,6 @@
         "security/detect-non-literal-require": "off",
         "security/detect-non-literal-fs-filename": "off",
 
-		// These are a sign that you're writing a different version of Node than we might be running
 		"no-restricted-syntax": "off",
 		"no-restricted-properties": "off",
 
@@ -42,7 +40,6 @@
 		"space-before-function-paren": "off",
 		"space-in-parens": "off",
 
-		// The rest should be fixed up, gradually.
 		"max-len": "off",
 		"vars-on-top": "off",
 		"wrap-iife": "off",
@@ -74,6 +71,6 @@
 
 		"no-buffer-constructor": "warn",
 
-		"valid-jsdoc": "off",
+		"valid-jsdoc": "off"
 	}
 }
