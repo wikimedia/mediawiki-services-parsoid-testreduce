@@ -21,7 +21,7 @@
 	},
 	"devDependencies": {
 		"eslint": "8.57.0",
-		"eslint-config-wikimedia": "0.27.0"
+		"eslint-config-wikimedia": "0.28.0"
 	},
 	"scripts": {
 		"eslint": "eslint server client utils",
