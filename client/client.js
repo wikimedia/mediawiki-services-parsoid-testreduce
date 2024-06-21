@@ -155,6 +155,8 @@ const defaultGitCommitFetch = function(repoPath) {
  * Get the current git commit hash.
  * Returns a fulfillment promise.
  * Checks for updated code every 5 minutes.
+ *
+ * @return {Promise}
  */
 const getGitCommit = function() {
 	let p;
