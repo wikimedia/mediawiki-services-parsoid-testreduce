@@ -116,7 +116,7 @@ function setupEndpoints(settings, app, mysql, db, hbs) {
 		const relativeUrlPrefix = '../../../';
 		db.query(dbNumOneDiffRegressionsBetweenRevs, [r2, r1, numFails, numSkips], function(err, row) {
 			if (err) {
-				res.send(err.toString(), 500);
+				res.status(500).send(err.toString());
 			} else {
 				const headingLink = [
 					{
@@ -207,7 +207,7 @@ function setupEndpoints(settings, app, mysql, db, hbs) {
 		const relativeUrlPrefix = '../../../';
 		db.query(dbNumNewFailsRegressionsBetweenRevs, [r2, r1], function(err, row) {
 			if (err) {
-				res.send(err.toString(), 500);
+				res.status(500).send(err.toString());
 			} else {
 				const data = {
 					page: page,

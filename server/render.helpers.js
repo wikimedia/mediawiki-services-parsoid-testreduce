@@ -85,7 +85,7 @@ RenderHelpers.pageStatus = function(row) {
 RenderHelpers.displayPageList = function(res, data, makeRow, err, rows) {
 	console.log("GET " + data.urlPrefix + "/" + data.page + data.urlSuffix);
 	if (err) {
-		res.send(err.toString(), 500);
+		res.status(500).send(err.toString());
 	} else {
 		res.status(200);
 		const tableData = data;

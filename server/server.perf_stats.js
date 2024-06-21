@@ -115,7 +115,7 @@ function setupEndpoints(settings, app, mysql, db) {
 
 		perfStatsTypes(db, function(err, types) {
 			if (err) {
-				res.send(err.toString(), 500);
+				res.status(500).send(err.toString());
 			} else {
 
 				const makePerfStatRow = function(urlPrefix, row) {
@@ -165,7 +165,7 @@ function setupEndpoints(settings, app, mysql, db) {
 
 	const getPagePerfStats = function(req, res) {
 		if (req.params.length < 2) {
-			res.send("No title given.", 404);
+			res.status(404).send("No title given.");
 		}
 
 		const prefix = req.params[0];
@@ -173,7 +173,7 @@ function setupEndpoints(settings, app, mysql, db) {
 
 		perfStatsTypes(db, function(err, types) {
 			if (err) {
-				res.send(err.toString(), 500);
+				res.status(500).send(err.toString());
 			} else {
 				let dbStmt = dbPagePerfStatsStart;
 				for (let t = 0; t < types.length; t++) {
@@ -189,9 +189,9 @@ function setupEndpoints(settings, app, mysql, db) {
 				// Get maximum the last 10 commits.
 				db.query(dbStmt, [ prefix, title, 10 ], function(err2, rows) {
 					if (err2) {
-						res.send(err2.toString(), 500);
+						res.status(500).send(err2.toString());
 					} else if (!rows || rows.length === 0) {
-						res.send("No performance results found for page.", 200);
+						res.status(200).send("No performance results found for page.");
 					} else {
 						res.status(200);
 						const tableHeaders = ['Commit'];
