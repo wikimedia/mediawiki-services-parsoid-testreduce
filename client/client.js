@@ -190,10 +190,13 @@ const postResult = function(err, result, test, finalCB, cb) {
 				result = {
 					err: { name: err.name, msg: err.toString(), },
 				};
+				if (err.stack) {
+					result.err.stack = err.stack;
+				}
 			} else {
 				result =
 					'<error type="' + err.name + '">' +
-					err.toString() +
+					err.toString() + (err.stack ? ' ' + err.stack : '') +
 					'</error>';
 			}
 		}
