@@ -48,7 +48,7 @@ function generate_titles() {
 		const dumpFile = `dumps/${ wiki }-latest-all-titles.gz`;
 		if (forceDumpsRefresh || !fs.existsSync(dumpFile)) {
 			dumpCommands = [
-				`wget http://dumps.wikimedia.org/${ wiki }/latest/${ wiki }-latest-all-titles.gz`,
+				`wget https://dumps.wikimedia.org/${ wiki }/latest/${ wiki }-latest-all-titles.gz`,
 				`mv *.gz dumps/`
 			];
 		} else {
@@ -94,7 +94,9 @@ function generate_titles() {
 				for (let i = 0; i < titles.length; i++) {
 					const t = titles[i].replace(/"/g, '\\"');
 					if (t) {
-						out2.push(`INSERT IGNORE INTO pages(title, prefix) VALUES("${ t }", "${ wiki }");`);
+						let value = /"/.test(t) ? "'" + t + "'" : '"' + t + '"';
+						value = value.replace(/\\/g, "\\\\");
+						out2.push(`INSERT IGNORE INTO pages(title, prefix) VALUES(${ value }, "${ wiki }");`);
 					}
 				}
 				fs.writeFileSync(`${ wikiWithNS }.titles.sql`, out2.join("\n"));
