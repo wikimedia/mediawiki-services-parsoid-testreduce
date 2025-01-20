@@ -318,6 +318,7 @@ const dbFailsQuery =
 	') AS s1 ON s1.most_recent = stats.id ' +
 	'JOIN pages ON stats.page_id = pages.id ' +
 	'JOIN commits ON stats.commit_hash = commits.hash ' +
+	'WHERE ? IS NULL OR pages.prefix = ? ' +
 	'ORDER BY stats.score DESC ' +
 	'LIMIT 40 OFFSET ?';
 
@@ -880,15 +881,16 @@ function failsWebInterface(req, res) {
 	const page = (req.params[0] || 0) - 0;
 	const offset = page * 40;
 	const relativeUrlPrefix = (req.params[0] ? '../' : '');
+	const wiki = req.query.wiki || null;
 	const data = {
 		page: page,
 		relativeUrlPrefix: relativeUrlPrefix,
 		urlPrefix: relativeUrlPrefix + 'topfails',
-		urlSuffix: '',
+		urlSuffix: wiki !== null ? '?wiki=' + wiki : '',
 		heading: 'Results by title',
 		header: ['Title', 'Commit', 'Errors', 'Semantic diffs', 'Syntactic diffs'],
 	};
-	pool.query(dbFailsQuery, [ offset ],
+	pool.query(dbFailsQuery, [ wiki, wiki, offset ],
 		RH.displayPageList.bind(null, res, data, makeFailsRow));
 }
 
