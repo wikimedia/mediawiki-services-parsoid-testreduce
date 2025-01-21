@@ -5,6 +5,8 @@
 
 'use strict';
 
+const Promise = require("../utils/promise");
+
 (function() {
 	if (typeof module === 'object') {
 		module.exports = {
@@ -31,9 +33,10 @@
 			// TODO: Document format of expected results to satisfy the server
 			runTest: function(opts, test) {
 				// .. run your test ..
+				return new Promise(() => {});
 			},
 
-			// The fully resolved path of the git repository against which
+			// The fully resolved path of the (local) git repository against which
 			// we are running mass tests.
 			gitRepoPath: null,
 
