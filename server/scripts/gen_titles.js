@@ -5,7 +5,7 @@ const fs = require('fs');
 const request = require('request');
 const cp = require('child_process');
 const testdb = require('./testdb.info.js');
-const wikis = testdb.wikis;
+const wikisizes = require('./wikisizes.json');
 const Promise = require('prfun/wrap')(require('babybird'));
 const execP = Promise.promisify(cp.exec, ['stdout', 'stderr'], cp);
 const forceDumpsRefresh = false;
@@ -31,15 +31,16 @@ const NS_MAP = {
 };
 
 function generate_titles() {
-	const sum = wikis.reduce(function(s, w) {
-		return s + w.limit;
-	}, 0);
-	Promise.reduce(wikis, function(unused, w) {
-		const wiki = w.prefix;
+	Promise.reduce(testdb.wikis, function(unused, wiki) {
 		const fraction = testdb.dump_percentage / 100;
 		const wikiWithNS = wiki;
-		const n = Math.ceil(w.limit / sum * fraction * testdb.size);
-		const total = Math.ceil(n / fraction);
+		let count = Math.ceil(fraction * wikisizes[wiki] * testdb.sample_size);
+		let total = Math.ceil(count / fraction);
+		if (total < testdb.min_titles) {
+			total = testdb.min_titles;
+			count = total * fraction;
+		}
+
 		let dumpCommands;
 
 		console.log(`--- wiki ${ wikiWithNS } ----`);
@@ -55,7 +56,7 @@ function generate_titles() {
 			dumpCommands = [];
 		}
 		dumpCommands = dumpCommands.concat([
-			`zcat ${ dumpFile } | shuf | head -${ n } > ${ randTitlesFile }`,
+			`zcat ${ dumpFile } | shuf | head -${ count } > ${ randTitlesFile }`,
 			`head -2 ${ randTitlesFile }`,
 		]);
 		return execP(dumpCommands.join("; ")).then(function(out) {
@@ -85,7 +86,7 @@ function generate_titles() {
 				// will be smaller.
 				`cat dbdata/${ wiki }.top_titles.txt dbdata/${ wikiWithNS }.rc_titles.txt ${ randTitlesFile } | sort | uniq | shuf | head -${ total } > dbdata/${ wikiWithNS }.all_titles.txt`,
 			];
-			console.log(`Generating ${ n } random titles from dump`);
+			console.log(`Generating ${ count } random titles from dump`);
 
 			execP(commands.join("; ")).then(function(out2) {
 				console.log(out2.stdout);

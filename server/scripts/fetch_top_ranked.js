@@ -4,7 +4,7 @@
 const fs = require('fs');
 const request = require('request');
 const testdb = require('./testdb.info.js');
-const wikis = testdb.wikis;
+const wikisizes = require('./wikisizes.json');
 
 function processRes(fetchArgs, out, err, resp, body) {
 	if (err || resp.statusCode !== 200) {
@@ -40,20 +40,14 @@ function fetchAll(fetchArgs, out) {
 
 // +0.01 is so we fetch a few extra titles to account for the title overlap
 // between the different lists
-const sum = wikis.reduce(function(s, w) {
-	return s + w.limit;
-}, 0);
 const fraction = testdb.popular_pages_percentage / 100 + 0.01;
-wikis.forEach(function(obj) {
-	const isTalk = obj.ns === 1;
-	if (isTalk) {
-		return;
-	}
-	const count = Math.ceil(obj.limit / sum * fraction * testdb.size);
-	const prefix = obj.prefix;
+testdb.wikis.forEach(function(prefix) {
+	const count = Math.ceil(fraction * wikisizes[prefix] * testdb.sample_size);
 	const domain = prefix.replace(/_/, '-').replace(/wiki$/, '.wikipedia.org')
 		.replace(/wiktionary/, '.wiktionary.org')
 		.replace(/wikisource/, '.wikisource.org')
+		.replace(/wikibooks/, '.wikibooks.org')
+		.replace(/wikiquote/, '.wikiquote.org')
 		.replace(/wikivoyage/, '.wikivoyage.org');
 	let year = (new Date()).getFullYear();
 	let month = (new Date()).getMonth();
