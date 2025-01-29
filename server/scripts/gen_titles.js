@@ -44,7 +44,7 @@ function generate_titles() {
 
 		console.log(`--- wiki ${ wikiWithNS } ----`);
 		console.log(`Generating ${ total } titles in all`);
-		const randTitlesFile = `${ wiki }.random_titles.txt`;
+		const randTitlesFile = `dbdata/${ wiki }.random_titles.txt`;
 		const dumpFile = `dumps/${ wiki }-latest-all-titles.gz`;
 		if (forceDumpsRefresh || !fs.existsSync(dumpFile)) {
 			dumpCommands = [
@@ -83,13 +83,13 @@ function generate_titles() {
 				// Additionally, in the case of talk ns, since not all talk:* titles from
 				// dumps might exist, the actual working set once we run the first test run
 				// will be smaller.
-				`cat ${ wiki }.top_titles.txt ${ wikiWithNS }.rc_titles.txt ${ randTitlesFile } | sort | uniq | shuf | head -${ total } > ${ wikiWithNS }.all_titles.txt`,
+				`cat dbdata/${ wiki }.top_titles.txt dbdata/${ wikiWithNS }.rc_titles.txt ${ randTitlesFile } | sort | uniq | shuf | head -${ total } > dbdata/${ wikiWithNS }.all_titles.txt`,
 			];
 			console.log(`Generating ${ n } random titles from dump`);
 
 			execP(commands.join("; ")).then(function(out2) {
 				console.log(out2.stdout);
-				const titles = fs.readFileSync(`${ wikiWithNS }.all_titles.txt`, 'utf8').split(/[\n\r]+/);
+				const titles = fs.readFileSync(`dbdata/${ wikiWithNS }.all_titles.txt`, 'utf8').split(/[\n\r]+/);
 				out2 = [];
 				for (let i = 0; i < titles.length; i++) {
 					const t = titles[i].replace(/"/g, '\\"');
@@ -99,8 +99,8 @@ function generate_titles() {
 						out2.push(`INSERT IGNORE INTO pages(title, prefix) VALUES(${ value }, "${ wiki }");`);
 					}
 				}
-				fs.writeFileSync(`${ wikiWithNS }.titles.sql`, out2.join("\n"));
-				console.log(`Generated sql import script @ ${ wikiWithNS }.titles.sql`);
+				fs.writeFileSync(`dbdata/${ wikiWithNS }.titles.sql`, out2.join("\n"));
+				console.log(`Generated sql import script @ dbdata/${ wikiWithNS }.titles.sql`);
 				return true;
 			}).catch(function(e) {
 				console.log(`Error: ${ e }`);

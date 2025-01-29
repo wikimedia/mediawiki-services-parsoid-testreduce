@@ -6,6 +6,8 @@ if [ $# -lt 1 ]; then
 fi
 db_password=$1
 
+mkdir -p dbdata
+
 # Run the scripts
 echo "---- FETCHING TOP_RANKED PAGES ----"
 node fetch_top_ranked.js
@@ -33,7 +35,7 @@ echo $wikis
 for w in $wikis
 do
 	echo "-- Importing titles for $w --"
-	echo "mysql -u testreduce -p$db_password parsoid_rv_deploy_targets < $w.titles.sql"
-	mysql -u testreduce -p"$db_password" parsoid_rv_deploy_targets < "$w.titles.sql"
+	echo "mysql -u testreduce -p$db_password parsoid_rv_deploy_targets < dbdata/$w.titles.sql"
+	mysql -u testreduce -p"$db_password" parsoid_rv_deploy_targets < "dbdata/$w.titles.sql"
 done
 echo "---- ALL DONE ----"

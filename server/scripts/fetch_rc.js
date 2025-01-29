@@ -34,7 +34,7 @@ function processRes(fetchArgs, out, err, resp, body) {
 		fetchAll(fetchArgs, out);
 	} else {
 		const suffix = fetchArgs.isTalk ? '_talk' : '';
-		const fileName = './' + fetchArgs.prefix + suffix + '.rc_titles.txt';
+		const fileName = './dbdata/' + fetchArgs.prefix + suffix + '.rc_titles.txt';
 		console.warn('Got ' + out.length + ' titles from ' + fetchArgs.prefix + '; writing to ' + fileName);
 		fs.writeFileSync(fileName, out.join('\n'));
 	}

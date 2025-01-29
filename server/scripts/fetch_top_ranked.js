@@ -26,7 +26,7 @@ function processRes(fetchArgs, out, err, resp, body) {
 		titles.push(articles[i].article);
 	}
 
-	const fileName = './' + fetchArgs.prefix + '.top_titles.txt';
+	const fileName = './dbdata/' + fetchArgs.prefix + '.top_titles.txt';
 	console.warn('Got ' + titles.length + ' top-ranked titles from ' + fetchArgs.prefix + '; writing to ' + fileName);
 	fs.writeFileSync(fileName, titles.join('\n'));
 }
