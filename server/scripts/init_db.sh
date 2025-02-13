@@ -32,9 +32,7 @@ truncate stats;
 
 echo "---- IMPORTING TITLES INTO DB ----"
 # -- if we want do this the node way --
-# wikis=`echo "console.log(require('./testdb.info.js').wikis.map(function(w) { return w.prefix; }).join(' '))" | node`
-#
-wikis=$(grep prefix testdb.info.js | sed "s/.*:'//g;s/'.*$//g;")
+wikis=$(echo "console.log(require('./testdb.info.js').wikis.join(' '))" | node)
 echo $wikis
 for w in $wikis
 do
