@@ -16,13 +16,13 @@ module.exports = {
 	dump_percentage: 85,
 
 	wikis: [
-		'enwiktionary', 'frwiktionary', 'ruwiktionary', 'dewiktionary', 'eswiktionary',
-		'plwiktionary', 'elwiktionary', 'jawiktionary', 'zhwiktionary', 'nlwiktionary',
-		'idwiktionary', 'cswiktionary', 'itwiktionary', 'viwiktionary', 'ptwiktionary',
-		'svwiktionary', 'fiwiktionary', 'trwiktionary', 'thwiktionary', 'kowiktionary',
-		'hewiktionary', 'simplewiktionary', 'tawiktionary', 'mswiktionary', 'cawiktionary',
-		'fawiktionary', 'huwiktionary', 'ukwiktionary', 'rowiktionary', 'uzwiktionary',
-		'hiwiktionary', 'hywiktionary', 'mgwiktionary', 'kuwiktionary', 'srwiktionary',
-		'arwiktionary', 'bgwiktionary', 'bnwiktionary', 'knwiktionary', 'nowiktionary',
+		'iowiktionary', 'etwiktionary', 'dawiktionary', 'swwiktionary', 'glwiktionary',
+		'ltwiktionary', 'mywiktionary', 'eowiktionary', 'mlwiktionary', 'afwiktionary',
+		'skwiktionary', 'ocwiktionary', 'tewiktionary', 'iswiktionary', 'wawiktionary',
+		'kawiktionary', 'azwiktionary', 'bclwiktionary','jvwiktionary', 'tlwiktionary',
+		'hrwiktionary', 'kmwiktionary', 'lawiktionary', 'mnwwiktionary', 'brwiktionary',
+		'lmowiktionary', 'hawiktionary', 'astwiktionary', 'yuewiktionary', 'sqwiktionary',
+		'urwiktionary', 'zh_min_nanwiktionary', 'liwiktionary', 'shnwiktionary', 'mnwiktionary',
+		'sawiktionary', 'kkwiktionary', 'cywiktionary', 'minwiktionary', 'siwiktionary'
 	],
 };
