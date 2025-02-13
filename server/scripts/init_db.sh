@@ -18,6 +18,10 @@ node fetch_rc.js
 echo "---- FETCHING DUMPS & GENERATING SQL FILES ----"
 node gen_titles.js
 
+echo "---- BACKUP DB ----"
+date=$(date '+%Y-%m-%d')
+mysqldump --databases parsoid_rv_deploy_targets -u testreduce -p"$db_password" > parsoid_rv_deploy_targets.$date.sql
+
 echo "---- CLEAR DB ----"
 mysql -u testreduce -p"$db_password" parsoid_rv_deploy_targets <<@END
 truncate commits;

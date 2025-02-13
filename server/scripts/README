@@ -1,32 +1,7 @@
-1. Prepare the scripts
-
-   - Update testdb.info.js with wikis you want to download from
-     and also set the # titles and fractions for randomly picked
-     titles and recently edited pages.
-   - If you have ns0 title dumps locally and don't need to download them,
-     update gen_titles.js and toggle forceDumpsRefresh
-
-2. Fetch top ranked titles by running fetch_top_ranked.js
-
-3. Fetch recently edited titles by running fetch_rc.js
-
-4. Run gen_titles.js to:
-   * downloads dumps
-   * generate random selection of titles
-   * merge the two sets (random selection, recently edited) of
-     titles and generate a single unique title list.
-   * generate sql import scripts
-
-5. Upload/move the sql files to the right server/directory.
-
-6. On your target server, use mysqladmin/mysql or whatever to
-   generate your new db.
-
-7. If necessary, init the db with the schema found in ../sql/create_everything.mysql
-
-8. Run the mysql import scripts to populate your rt-testing db.
-
-You are all done generating the new db.
-
-Update your rt-testing server settings to point to the new db
-and restart the server.
+1. Stop the services (parsoid-vs-core-vd & parsoid-vs-core-vd-client).
+2. Update testdb.info.js with wikis you want to download from.
+3. Run init_db.sh script.
+4. Update the client config file for testreduce, if necessary
+   (for example, to change the "gitCommitFetch" section
+	 if a new train has rolled out.)
+5. Restart services (parsoid-vs-core-vd & parsoid-vs-core-vd-client).
