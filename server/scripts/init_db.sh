@@ -20,7 +20,7 @@ node gen_titles.js
 
 echo "---- BACKUP DB ----"
 date=$(date '+%Y-%m-%d')
-mysqldump --databases parsoid_rv_deploy_targets -u testreduce -p"$db_password" > parsoid_rv_deploy_targets.$date.sql
+mysqldump --databases parsoid_rv_deploy_targets -u testreduce -p"$db_password" > backups/parsoid_rv_deploy_targets.$date.sql
 
 echo "---- CLEAR DB ----"
 mysql -u testreduce -p"$db_password" parsoid_rv_deploy_targets <<@END

@@ -2,8 +2,8 @@
 'use strict';
 
 module.exports = {
-	// 0.2% of all wiki titles
-	sample_size: 0.002,
+	// 0.5% of all wiki titles
+	sample_size: 0.005,
 
 	// but, at least 1000 titles per wiki
 	min_titles: 1000,
@@ -16,9 +16,6 @@ module.exports = {
 	dump_percentage: 85,
 
 	wikis: [
-		"kaawiktionary", "madwiktionary", "glwiktionary", "mywiktionary", "wawiktionary",
-		"amwiktionary", "sdwiktionary", "enwiktionary", "huwiktionary", "gdwiktionary",
-		"iawiktionary", "kawiktionary", "lawiktionary", "lmowiktionary", "astwiktionary",
-		"ndswiktionary"
+		"nlwiki", "plwiki", "itwiki"
 	],
 };

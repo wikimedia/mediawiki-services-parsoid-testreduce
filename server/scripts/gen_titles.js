@@ -20,13 +20,6 @@ const NS_MAP = {
 	14:"Category",
 	90:"Thread", // LQT
 	92:"Summary", // LQT
-	100:"Appendix", // wiktionary-specific
-	106:"Rhymes", // wiktonary-specific
-	108:"Transwiki", // wiktionary-specific
-	110:"Thesaurus", // wiktionary-specific
-	114:"Citations", // wiktionary-specific
-	116:"Sign gloss", // wiktionary-specific
-	118:"Reconstruction", // wiktionary-specific
 	828:"Module",
 };
 
@@ -46,10 +39,11 @@ function generate_titles() {
 		console.log(`--- wiki ${ wikiWithNS } ----`);
 		console.log(`Generating ${ total } titles in all`);
 		const randTitlesFile = `dbdata/${ wiki }.random_titles.txt`;
-		const dumpFile = `dumps/${ wiki }-latest-all-titles.gz`;
+		const dumpVersion = "20250720"; // "latest"
+		const dumpFile = `dumps/${ wiki }-${ dumpVersion }-all-titles.gz`;
 		if (forceDumpsRefresh || !fs.existsSync(dumpFile)) {
 			dumpCommands = [
-				`wget https://dumps.wikimedia.org/${ wiki }/latest/${ wiki }-latest-all-titles.gz`,
+				`wget https://dumps.wikimedia.org/${ wiki }/${ dumpVersion }/${ wiki }-${ dumpVersion }-all-titles.gz`,
 				`mv *.gz dumps/`
 			];
 		} else {
