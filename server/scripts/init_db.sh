@@ -1,10 +1,11 @@
 #!/bin/bash
 set -eu -o pipefail
 if [ $# -lt 1 ]; then
-	echo "USAGE: $0 MYSQL_DB_PASSWORD"
+	echo "USAGE: $0 MYSQL_DB MYSQL_DB_PASSWORD"
 	exit 1
 fi
-db_password=$1
+db=$1
+db_password=$2
 
 mkdir -p dbdata
 
@@ -20,10 +21,10 @@ node gen_titles.js
 
 echo "---- BACKUP DB ----"
 date=$(date '+%Y-%m-%d')
-mysqldump --databases parsoid_rv_deploy_targets -u testreduce -p"$db_password" > backups/parsoid_rv_deploy_targets.$date.sql
+mysqldump --databases "$db" -u testreduce -p"$db_password" > backups/$db.$date.sql
 
 echo "---- CLEAR DB ----"
-mysql -u testreduce -p"$db_password" parsoid_rv_deploy_targets <<@END
+mysql -u testreduce -p"$db_password" "$db" <<@END
 truncate commits;
 truncate pages;
 truncate results;
@@ -37,7 +38,12 @@ echo $wikis
 for w in $wikis
 do
 	echo "-- Importing titles for $w --"
-	echo "mysql -u testreduce -p$db_password parsoid_rv_deploy_targets < dbdata/$w.titles.sql"
-	mysql -u testreduce -p"$db_password" parsoid_rv_deploy_targets < "dbdata/$w.titles.sql"
+	echo "mysql -u testreduce -p"$db_password" "$db" < dbdata/$w.titles.sql"
+	if [ -f dbdata/$w.titles.sql ]
+	then
+		mysql -u testreduce -p"$db_password" "$db" < "dbdata/$w.titles.sql"
+	else
+		echo "FAILED to generate titles for $w"
+	fi
 done
 echo "---- ALL DONE ----"

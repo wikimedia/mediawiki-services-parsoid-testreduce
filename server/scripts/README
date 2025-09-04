@@ -1,10 +1,23 @@
 1. Stop the services (parsoid-vs-core-vd & parsoid-vs-core-vd-client).
+
 2. Update testdb.info.js with wikis you want to download from.
+
+   Helpful utility: Use "bash get_wp_list.sh <start> <count>" to extract
+   <count> titles from wps.json starting at offset <start>.
+   Ex: "bash get_wp_list.sh -150 50" will get 50 titles starting
+   at index -150 (150 from the end). This script excludes wikis
+   wiki language variants enabled.
+
+   Copy this list to testdb.info.js
+
 3. Run init_db.sh $DBPASSWD script (the password can be found in
    /etc/testreduce/parsoid-vs-core-vd.settings.js)
+
 4. Update the client config file for testreduce (in /etc/testreduce),
    if necessary (for example, to change the "gitCommitFetch" section
    if a new train has rolled out.) The configuration is not puppetized
    and can be edited directly.
+
 5. Restart services (parsoid-vs-core-vd & parsoid-vs-core-vd-client).
+
 6. Check that tests are running (sudo journalctl -u parsoid-vs-core-vd)
