@@ -87,9 +87,9 @@ function generate_titles() {
 				const titles = fs.readFileSync(`dbdata/${ wikiWithNS }.all_titles.txt`, 'utf8').split(/[\n\r]+/);
 				out2 = [];
 				for (let i = 0; i < titles.length; i++) {
-					const t = titles[i].replace(/"/g, '\\"');
+					const t = titles[i].replace(/'/g, "''");
 					if (t) {
-						let value = /"/.test(t) ? "'" + t + "'" : '"' + t + '"';
+						let value = "'" + t + "'";
 						value = value.replace(/\\/g, "\\\\");
 						out2.push(`INSERT IGNORE INTO pages(title, prefix) VALUES(${ value }, "${ wiki }");`);
 					}
