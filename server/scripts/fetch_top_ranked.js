@@ -48,7 +48,8 @@ testdb.wikis.forEach(function(prefix) {
 		.replace(/wikisource/, '.wikisource.org')
 		.replace(/wikibooks/, '.wikibooks.org')
 		.replace(/wikiquote/, '.wikiquote.org')
-		.replace(/wikivoyage/, '.wikivoyage.org');
+		.replace(/wikivoyage/, '.wikivoyage.org')
+		.replace(/wikimedia/, '.wikimedia.org');
 	let year = (new Date()).getFullYear();
 	let month = (new Date()).getMonth();
 	if (month === 1) {

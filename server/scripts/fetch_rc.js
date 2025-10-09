@@ -63,7 +63,8 @@ testdb.wikis.forEach(function(prefix) {
 	const domain = prefix.replace(/_/, '-').replace(/wiki$/, '.wikipedia.org')
 		.replace(/wiktionary/, '.wiktionary.org')
 		.replace(/wikisource/, '.wikisource.org')
-		.replace(/wikivoyage/, '.wikivoyage.org');
+		.replace(/wikivoyage/, '.wikivoyage.org')
+		.replace(/wikimedia/, '.wikimedia.org');
 	const opts = {
 		action: 'query',
 		list: 'recentchanges',
