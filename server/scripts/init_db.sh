@@ -9,16 +9,6 @@ db_password=$2
 
 mkdir -p dbdata
 
-# Run the scripts
-echo "---- FETCHING TOP_RANKED PAGES ----"
-node fetch_top_ranked.js
-
-echo "---- FETCHING RECENT_STREAM PAGES ----"
-node fetch_rc.js
-
-echo "---- FETCHING DUMPS & GENERATING SQL FILES ----"
-node gen_titles.js
-
 echo "---- BACKUP DB ----"
 date=$(date '+%Y-%m-%d')
 mysqldump --databases "$db" -u testreduce -p"$db_password" > backups/$db.$date.sql
@@ -31,19 +21,36 @@ truncate results;
 truncate stats;
 @END
 
-echo "---- IMPORTING TITLES INTO DB ----"
 # -- if we want do this the node way --
 wikis=$(echo "console.log(require('./testdb.info.js').wikis.join(' '))" | node)
 echo $wikis
 for w in $wikis
 do
-	echo "-- Importing titles for $w --"
-	echo "mysql -u testreduce -p"$db_password" "$db" < dbdata/$w.titles.sql"
+	echo "---- TITLE GENERATION FOR $w ----"
 	if [ -f dbdata/$w.titles.sql ]
 	then
+		echo "-- Importing existing titles for $w --"
+		echo "mysql -u testreduce -p"$db_password" "$db" < dbdata/$w.titles.sql"
 		mysql -u testreduce -p"$db_password" "$db" < "dbdata/$w.titles.sql"
 	else
-		echo "FAILED to generate titles for $w"
+		# Run the scripts
+		echo "---- Fetching top_ranked pages ----"
+		node fetch_top_ranked.js $w
+
+		echo "---- Fetching recent_stream pages ----"
+		node fetch_rc.js $w
+
+		echo "---- Fetching dumps & generating sql files ----"
+		node gen_titles.js $w
+
+		if [ -f dbdata/$w.titles.sql ]
+		then
+			echo "-- Importing titles for $w --"
+			echo "mysql -u testreduce -p"$db_password" "$db" < dbdata/$w.titles.sql"
+			mysql -u testreduce -p"$db_password" "$db" < "dbdata/$w.titles.sql"
+		else
+			echo "FAILED to generate titles for $w"
+		fi
 	fi
 done
 echo "---- ALL DONE ----"

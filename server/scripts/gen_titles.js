@@ -23,8 +23,8 @@ const NS_MAP = {
 	828:"Module",
 };
 
-function generate_titles() {
-	Promise.reduce(testdb.wikis, function(unused, wiki) {
+function generate_titles(wikis) {
+	Promise.reduce(wikis, function(unused, wiki) {
 		const fraction = testdb.dump_percentage / 100;
 		const wikiWithNS = wiki;
 		let count = Math.ceil(fraction * wikisizes[wiki] * testdb.sample_size);
@@ -106,4 +106,4 @@ function generate_titles() {
 	}, 0);
 }
 
-generate_titles();
+generate_titles(process.argv.length > 2 ? [ process.argv[2] ] : testdb.wikis);

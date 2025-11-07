@@ -55,10 +55,10 @@ function fetchAll(fetchArgs, out) {
 	request(requestOpts, processRes.bind(null, fetchArgs, out));
 }
 
-// +0.02 is so we fetch a few extra titles to account for the title overlap
-// between the list of randomly generated titles and recently edited titles.
-const fraction = ((1 - (testdb.popular_pages_percentage + testdb.dump_percentage) / 100) + 0.02);
-testdb.wikis.forEach(function(prefix) {
+function runForWiki(prefix) {
+	// +0.02 is so we fetch a few extra titles to account for the title overlap
+	// between the list of randomly generated titles and recently edited titles.
+	const fraction = ((1 - (testdb.popular_pages_percentage + testdb.dump_percentage) / 100) + 0.02);
 	const count = Math.ceil(fraction * wikisizes[prefix] * testdb.sample_size);
 	const domain = prefix.replace(/_/, '-').replace(/wiki$/, '.wikipedia.org')
 		.replace(/wiktionary/, '.wiktionary.org')
@@ -83,5 +83,9 @@ testdb.wikis.forEach(function(prefix) {
 		opts: opts,
 	};
 	fetchAll(fetchArgs, []);
-});
+}
 
+const wikis = process.argv.length > 2 ? [ process.argv[2] ] : testdb.wikis;
+wikis.forEach(function(prefix) {
+	runForWiki(prefix);
+});
