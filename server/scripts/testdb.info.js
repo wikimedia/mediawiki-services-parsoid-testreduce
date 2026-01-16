@@ -16,6 +16,11 @@ module.exports = {
 	dump_percentage: 85,
 
 	wikis: [
-		"nlwiki", "plwiki", "itwiki"
+		"hawiki","mnwiki","aswiki","cywiki","siwiki",
+		"kmwiki","newiki","pawiki","be-taraskwiki","ocwiki",
+		"nanwiki","ttwiki","brwiki","gawiki","igwiki",
+		"alswiki","orwiki","cewiki","pnbwiki","bhwiki",
+		"lzhwiki","mznwiki","pswiki","rwwiki","barwiki",
+		"scnwiki","sawiki","vecwiki","tkwiki","ruewiki"
 	],
 };
