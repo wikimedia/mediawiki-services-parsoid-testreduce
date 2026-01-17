@@ -279,7 +279,7 @@
 	{ "prefix":"pdcwiki" },
 	{ "prefix":"arcwiki" },
 	{ "prefix":"kiwiki" },
-	{ "prefix":"rupwiki" },
+	{ "prefix":"roa-rupwiki" },
 	{ "prefix":"biwiki" },
 	{ "prefix":"myvwiki" },
 	{ "prefix":"tiwiki" },
