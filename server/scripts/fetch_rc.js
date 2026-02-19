@@ -13,6 +13,7 @@ function processRes(fetchArgs, out, err, resp, body) {
 		}
 		if (resp) {
 			console.error('Status code: ' + resp.statusCode);
+			console.error(resp.body);
 		}
 		return;
 	}
@@ -48,6 +49,9 @@ function fetchAll(fetchArgs, out) {
 		followRedirect: true,
 		uri: fetchArgs.uri,
 		qs: opts,
+		headers: {
+			'User-Agent': 'Parsoid-PHP/1.0 (https://mediawiki.org/wiki/Parsoid) VisualDiff/1.0',
+		},
 	};
 	fetchArgs.count -= opts.rclimit;
 

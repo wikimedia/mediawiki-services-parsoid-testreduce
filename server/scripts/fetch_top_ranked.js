@@ -14,6 +14,7 @@ function processRes(fetchArgs, out, err, resp, body) {
 		}
 		if (resp) {
 			console.error('Status code: ' + resp.statusCode);
+			console.error(resp.body);
 		}
 		return;
 	}
@@ -33,7 +34,13 @@ function processRes(fetchArgs, out, err, resp, body) {
 
 function fetchAll(fetchArgs, out) {
 	const n = fetchArgs.count;
-	const requestOpts = { method: 'GET', uri: fetchArgs.uri };
+	const requestOpts = {
+		method: 'GET',
+		uri: fetchArgs.uri,
+		headers: {
+			'User-Agent': 'Parsoid-PHP/1.0 (https://mediawiki.org/wiki/Parsoid) VisualDiff/1.0',
+		},
+	};
 	console.log('Fetching ' + n + ' results from ' + fetchArgs.prefix);
 	request(requestOpts, processRes.bind(null, fetchArgs, out));
 }
