@@ -62,9 +62,9 @@ function runForWiki(prefix) {
 	if (month < 10) {
 		month = `0${ month }`;
 	}
-	// Hardcoding for now because 2025 data isn't available yet
-	year = 2024;
-	month = 12;
+	// Hardcoding for now (was 2024-12)
+	year = 2026;
+	month = '01';
 	console.log('Processing: ' + prefix + "; fetching: " + count + " items!");
 	const fetchArgs = {
 		prefix: prefix,
