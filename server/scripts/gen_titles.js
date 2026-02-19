@@ -24,10 +24,12 @@ const NS_MAP = {
 };
 
 function generate_titles(wikis) {
-	Promise.reduce(wikis, function(unused, wiki) {
+	Promise.reduce(wikis, function(unused, prefix) {
+		const [baseprefix, variant] = prefix.split('.', 2); // allow for a variant
 		const fraction = testdb.dump_percentage / 100;
+		const wiki = prefix;
 		const wikiWithNS = wiki;
-		let count = Math.ceil(fraction * wikisizes[wiki] * testdb.sample_size);
+		let count = Math.ceil(fraction * wikisizes[baseprefix] * testdb.sample_size);
 		let total = Math.ceil(count / fraction);
 		if (total < testdb.min_titles) {
 			total = testdb.min_titles;
@@ -40,11 +42,11 @@ function generate_titles(wikis) {
 		console.log(`Generating ${ total } titles in all`);
 		const randTitlesFile = `dbdata/${ wiki }.random_titles.txt`;
 		const dumpVersion = "20250720"; // "latest"
-		const dumpFile = `dumps/${ wiki }-${ dumpVersion }-all-titles.gz`;
+		const dumpFile = `dumps/${ baseprefix }-${ dumpVersion }-all-titles.gz`;
 		if (forceDumpsRefresh || !fs.existsSync(dumpFile)) {
 			dumpCommands = [
-				`wget https://dumps.wikimedia.org/${ wiki }/${ dumpVersion }/${ wiki }-${ dumpVersion }-all-titles.gz`,
-				`mv *.gz dumps/`
+				`wget https://dumps.wikimedia.org/${ baseprefix }/${ dumpVersion }/${ baseprefix }-${ dumpVersion }-all-titles.gz`,
+				`mv *-all-titles.gz dumps/`
 			];
 		} else {
 			dumpCommands = [];

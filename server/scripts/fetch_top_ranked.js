@@ -48,9 +48,11 @@ function fetchAll(fetchArgs, out) {
 function runForWiki(prefix) {
 	// +0.01 is so we fetch a few extra titles to account for the title overlap
 	// between the different lists
+	const [baseprefix, variant] = prefix.split('.', 2); // allow for a variant
 	const fraction = testdb.popular_pages_percentage / 100 + 0.01;
-	const count = Math.ceil(fraction * wikisizes[prefix] * testdb.sample_size);
-	const domain = prefix.replace(/_/, '-').replace(/wiki$/, '.wikipedia.org')
+	const count = Math.ceil(fraction * wikisizes[baseprefix] * testdb.sample_size);
+	const domain = baseprefix.replace(/_/, '-')
+		.replace(/wiki$/, '.wikipedia.org')
 		.replace(/wiktionary/, '.wiktionary.org')
 		.replace(/wikisource/, '.wikisource.org')
 		.replace(/wikibooks/, '.wikibooks.org')
