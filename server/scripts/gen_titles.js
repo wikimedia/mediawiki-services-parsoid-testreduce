@@ -37,7 +37,7 @@ function generate_titles(wikis) {
 		console.log(`--- wiki ${ wikiWithNS } ----`);
 		console.log(`Generating ${ total } titles in all`);
 		const randTitlesFile = `dbdata/${ wiki }.random_titles.txt`;
-		const dumpVersion = "20250720"; // "latest"
+		const dumpVersion = "20260201"; // "latest"
 		const dumpFile = `dumps/${ baseprefix }-${ dumpVersion }-all-titles.gz`;
 		if (forceDumpsRefresh || !fs.existsSync(dumpFile)) {
 			dumpCommands = [
