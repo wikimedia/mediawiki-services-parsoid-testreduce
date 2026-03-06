@@ -64,7 +64,7 @@ function runForWiki(prefix) {
 	// between the list of randomly generated titles and recently edited titles.
 	const [baseprefix, variant] = prefix.split('.', 2); // allow for a variant
 	const fraction = ((1 - (testdb.popular_pages_percentage + testdb.dump_percentage) / 100) + 0.02);
-	const count = Math.ceil(fraction * wikisizes[baseprefix] * testdb.sample_size);
+	const count = Math.ceil(fraction * Math.max(testdb.min_titles, wikisizes[baseprefix] * testdb.sample_size));
 	const domain = baseprefix.replace(/_/, '-').replace(/wiki$/, '.wikipedia.org')
 		.replace(/wiktionary/, '.wiktionary.org')
 		.replace(/wikisource/, '.wikisource.org')

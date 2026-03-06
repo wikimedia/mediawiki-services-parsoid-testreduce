@@ -29,12 +29,8 @@ function generate_titles(wikis) {
 		const fraction = testdb.dump_percentage / 100;
 		const wiki = prefix;
 		const wikiWithNS = wiki;
-		let count = Math.ceil(fraction * wikisizes[baseprefix] * testdb.sample_size);
-		let total = Math.ceil(count / fraction);
-		if (total < testdb.min_titles) {
-			total = testdb.min_titles;
-			count = total * fraction;
-		}
+		let total = Math.max(testdb.min_titles, Math.ceil(wikisizes[baseprefix] * testdb.sample_size));
+		let count = Math.ceil(fraction * total);
 
 		let dumpCommands;
 

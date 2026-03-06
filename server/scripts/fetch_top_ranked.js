@@ -50,7 +50,7 @@ function runForWiki(prefix) {
 	// between the different lists
 	const [baseprefix, variant] = prefix.split('.', 2); // allow for a variant
 	const fraction = testdb.popular_pages_percentage / 100 + 0.01;
-	const count = Math.ceil(fraction * wikisizes[baseprefix] * testdb.sample_size);
+	const count = Math.ceil(fraction * Math.max(testdb.min_titles, wikisizes[baseprefix] * testdb.sample_size));
 	const domain = baseprefix.replace(/_/, '-')
 		.replace(/wiki$/, '.wikipedia.org')
 		.replace(/wiktionary/, '.wiktionary.org')
