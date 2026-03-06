@@ -57,6 +57,9 @@ function generate_titles(wikis) {
 			const resolvedTitles = [];
 			for (let i = 0; i < dumpTitles.length; i++) {
 				const t = dumpTitles[i].split(/\t/);
+				if ( t.length < 2 ) {
+					continue;
+				}
 				const nsId = Number(t[0]);
 				let ns;
 				if (nsId % 2 === 0) {
