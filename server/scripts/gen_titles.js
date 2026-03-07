@@ -48,7 +48,7 @@ function generate_titles(wikis) {
 			dumpCommands = [];
 		}
 		dumpCommands = dumpCommands.concat([
-			`zcat ${ dumpFile } | shuf | head -${ count } > ${ randTitlesFile }`,
+			`zcat ${ dumpFile } | ./seeded_shuf.sh 42 | head -${ count } > ${ randTitlesFile }`,
 			`head -2 ${ randTitlesFile }`,
 		]);
 		return execP(dumpCommands.join("; ")).then(function(out) {
@@ -79,7 +79,7 @@ function generate_titles(wikis) {
 				// Additionally, in the case of talk ns, since not all talk:* titles from
 				// dumps might exist, the actual working set once we run the first test run
 				// will be smaller.
-				`cat dbdata/${ wiki }.top_titles.txt dbdata/${ wikiWithNS }.rc_titles.txt ${ randTitlesFile } | sort | uniq | shuf | head -${ total } > dbdata/${ wikiWithNS }.all_titles.txt`,
+				`cat dbdata/${ wiki }.top_titles.txt dbdata/${ wikiWithNS }.rc_titles.txt ${ randTitlesFile } | sort | uniq | ./seeded_shuf.sh 42 | head -${ total } > dbdata/${ wikiWithNS }.all_titles.txt`,
 			];
 			console.log(`Generating ${ count } random titles from dump`);
 
