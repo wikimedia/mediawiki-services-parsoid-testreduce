@@ -436,6 +436,9 @@ const dbGetTwoResults =
 	'AND (commits.hash = ? OR commits.hash = ?) ' +
 	'ORDER BY commits.timestamp';
 
+const dbGetPrefixes =
+	'SELECT DISTINCT(prefix) AS wiki FROM pages ORDER BY prefix';
+
 function fetchCB(msg, failCb, successCb, err, result) {
 	if (err) {
 		if (failCb) {
@@ -887,11 +890,19 @@ function failsWebInterface(req, res) {
 		relativeUrlPrefix: relativeUrlPrefix,
 		urlPrefix: relativeUrlPrefix + 'topfails',
 		urlSuffix: wiki !== null ? '?wiki=' + wiki : '',
-		heading: 'Results by title',
+		heading: 'Results by title ' +
+			(wiki !== null ? `(${ wiki })` : '(all wikis)'),
 		header: ['Title', 'Commit', 'Errors', 'Semantic diffs', 'Syntactic diffs'],
 	};
-	pool.query(dbFailsQuery, [ wiki, wiki, offset ],
-		RH.displayPageList.bind(null, res, data, makeFailsRow));
+	getPrefixes(function(prefixes) {
+		data.headingLink = prefixes.map(function(otherwiki) {
+			return { url: `${ data.urlPrefix }?wiki=${ otherwiki }`, name: wiki };
+		});
+		data.headingLink.unshift({ url: data.urlPrefix, name: 'all wikis' });
+		pool.query(
+			dbFailsQuery, [ wiki, wiki, offset ],
+			RH.displayPageList.bind(null, res, data, makeFailsRow));
+	});
 }
 
 function resultsWebInterface(req, res) {
@@ -949,6 +960,18 @@ function resultWebInterface(req, res) {
 	} else {
 		pool.query(dbGetOneResult, [ title, prefix ], resultWebCallback.bind(null, req, res));
 	}
+}
+
+function getPrefixes(cb) {
+	pool.query(dbGetPrefixes, [], function(err, rows) {
+		const result = [];
+		if (!err) {
+			for (let i = 0; i < rows.length; i++) {
+				result.push(rows[i].wiki);
+			}
+		}
+		cb(result);
+	});
 }
 
 function getFailedFetches(req, res) {
