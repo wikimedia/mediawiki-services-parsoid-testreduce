@@ -2,11 +2,11 @@
 'use strict';
 
 module.exports = {
-	// 0.25% of all wiki titles
-	sample_size: 0.0025,
+	// 0.05% of all wiki titles
+	sample_size: 0.0005,
 
-	// but, at least 1000 titles per wiki
-	min_titles: 1000,
+	// but, at least 500 titles per wiki
+	min_titles: 500,
 
 	// How many of those do you want from traffic popularity
 	popular_pages_percentage: 5,
