@@ -896,7 +896,7 @@ function failsWebInterface(req, res) {
 	};
 	getPrefixes(function(prefixes) {
 		data.headingLink = prefixes.map(function(otherwiki) {
-			return { url: `${ data.urlPrefix }?wiki=${ otherwiki }`, name: wiki };
+			return { url: `${ data.urlPrefix }?wiki=${ otherwiki }`, name: otherwiki };
 		});
 		data.headingLink.unshift({ url: data.urlPrefix, name: 'all wikis' });
 		pool.query(
