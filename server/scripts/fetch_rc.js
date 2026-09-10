@@ -65,11 +65,14 @@ function runForWiki(prefix) {
 	const [baseprefix, variant] = prefix.split('.', 2); // allow for a variant
 	const fraction = ((1 - (testdb.popular_pages_percentage + testdb.dump_percentage) / 100) + 0.02);
 	const count = Math.ceil(fraction * Math.max(testdb.min_titles, wikisizes[baseprefix] * testdb.sample_size));
-	const domain = baseprefix.replace(/_/, '-').replace(/wiki$/, '.wikipedia.org')
-		.replace(/wiktionary/, '.wiktionary.org')
-		.replace(/wikisource/, '.wikisource.org')
-		.replace(/wikivoyage/, '.wikivoyage.org')
-		.replace(/wikimedia/, '.wikimedia.org');
+	let domain = prefix === 'labswiki'
+		? 'wikitech.wikimedia.org'
+		: baseprefix.replace(/_/, '-').replace(/wiki$/, '.wikipedia.org')
+			.replace(/wiktionary/, '.wiktionary.org')
+			.replace(/wikisource/, '.wikisource.org')
+			.replace(/wikiquote/, '.wikiquote.org')
+			.replace(/wikivoyage/, '.wikivoyage.org')
+			.replace(/wikimedia/, '.wikimedia.org');
 	const opts = {
 		action: 'query',
 		list: 'recentchanges',

@@ -12,7 +12,7 @@ const forceDumpsRefresh = false;
 const NS_MAP = {
 	0:"",
 	2:"User",
-	4:"Project",
+	4:"Project", // aliases to Wikiquote on wikiquote wikis
 	6:"File",
 	8:"MediaWiki",
 	10:"Template",
@@ -20,7 +20,10 @@ const NS_MAP = {
 	14:"Category",
 	90:"Thread", // LQT
 	92:"Summary", // LQT
+	116:"Tools", // wikitech
+	498:"Nova_Resource", // wikitech
 	828:"Module",
+	1728:"Event"
 };
 
 function generate_titles(wikis) {
@@ -37,7 +40,7 @@ function generate_titles(wikis) {
 		console.log(`--- wiki ${ wikiWithNS } ----`);
 		console.log(`Generating ${ total } titles in all`);
 		const randTitlesFile = `dbdata/${ wiki }.random_titles.txt`;
-		const dumpVersion = "20260201"; // "latest"
+		const dumpVersion = "20260901"; // "latest"
 		const dumpFile = `dumps/${ baseprefix }-${ dumpVersion }-all-titles.gz`;
 		if (forceDumpsRefresh || !fs.existsSync(dumpFile)) {
 			dumpCommands = [
